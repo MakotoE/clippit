@@ -6,7 +6,7 @@ edition = "2018"
 [lib]
 
 [[bin]]
-name = "clippy"
+name = "clippy-output"
 path = "src/main.rs"
 
 [dependencies]
