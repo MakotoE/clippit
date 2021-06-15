@@ -1,4 +1,3 @@
-use std::io::Read;
 use std::mem::take;
 
 /*
@@ -116,21 +115,21 @@ mod tests {
     fn clippy_output() {
         {
             let mut clippy = ClippyOutput::new(0);
-            let mut result: String = clippy.by_ref().collect();
+            let result: String = clippy.by_ref().collect();
             assert_eq!(result, CLIPPY_ART.to_string() + "/‾  \\\n");
 
             clippy.finish();
-            let mut result: String = clippy.collect();
+            let result: String = clippy.collect();
             assert_eq!(result, "\\___/");
         }
         {
             let mut clippy = ClippyOutput::new(0);
             clippy.add_str("a");
-            let mut result: String = clippy.by_ref().collect();
+            let result: String = clippy.by_ref().collect();
             assert_eq!(result, CLIPPY_ART.to_string() + "/‾  \\\n| a |\n");
 
             clippy.finish();
-            let mut result: String = clippy.collect();
+            let result: String = clippy.collect();
             assert_eq!(result, "\\___/");
         }
         {
@@ -138,7 +137,7 @@ mod tests {
             clippy.add_str("aa");
             clippy.finish();
 
-            let mut result: String = clippy.collect();
+            let result: String = clippy.collect();
             assert_eq!(
                 result,
                 CLIPPY_ART.to_string() + "/‾  \\\n| a |\n| a |\n\\___/"
