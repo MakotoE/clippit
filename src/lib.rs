@@ -86,6 +86,7 @@ impl ClippyOutput {
         }
     }
 
+    /// `add_str()` or `finish()` should not be called after `finish()`.
     pub fn finish(&mut self) {
         if !self.line.is_empty() {
             let line_length = self.line.chars().count() as u16;
@@ -138,26 +139,28 @@ mod tests {
             assert_eq!(result, "\\___/\n");
         }
         {
+            // Add empty string
+            let mut clippy = ClippyOutput::new(0);
+            clippy.add_str("");
+            clippy.finish();
+            let result: String = clippy.collect();
+            assert_eq!(result, CLIPPY_ART.to_string() + "/‾  \\\n\\___/\n");
+        }
+        {
             let mut clippy = ClippyOutput::new(0);
             clippy.add_str("a");
             let result: String = clippy.by_ref().collect();
             assert_eq!(result, CLIPPY_ART.to_string() + "/‾  \\\n| a |\n");
 
             clippy.finish();
-            let result: String = clippy.collect();
+            let result: String = clippy.by_ref().collect();
             assert_eq!(result, "\\___/\n");
-        }
-        {
-            // Wrap line
-            let mut clippy = ClippyOutput::new(0);
-            clippy.add_str("aa");
-            clippy.finish();
 
+            // Add string after finish()
+            clippy.add_str("a");
+            clippy.finish();
             let result: String = clippy.collect();
-            assert_eq!(
-                result,
-                CLIPPY_ART.to_string() + "/‾  \\\n| a |\n| a |\n\\___/\n"
-            );
+            assert_eq!(result, "| a |\n\\___/\n");
         }
         {
             // Output width = 6
@@ -169,6 +172,18 @@ mod tests {
             assert_eq!(
                 result,
                 CLIPPY_ART.to_string() + "/‾  ‾\\\n| aa |\n\\____/\n"
+            );
+        }
+        {
+            // Wrap long line
+            let mut clippy = ClippyOutput::new(6);
+            clippy.add_str("aaa");
+            clippy.finish();
+
+            let result: String = clippy.collect();
+            assert_eq!(
+                result,
+                CLIPPY_ART.to_string() + "/‾  ‾\\\n| aa |\n| a  |\n\\____/\n"
             );
         }
         {
