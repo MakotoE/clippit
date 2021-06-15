@@ -1,0 +1,13 @@
+[package]
+name = "clippy-output"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+
+[[bin]]
+name = "clippy"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0"
