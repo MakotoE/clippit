@@ -10,8 +10,8 @@ use std::mem::take;
 \___/
   /\
 /‾  ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
-| asdf                 |
-| asdf                 |
+| Text goes            |
+| here                 |
 \______________________/
  */
 
@@ -30,6 +30,8 @@ const CLIPPY_ART: &str = r#"/‾‾\
 #[derive(Default, Clone, PartialOrd, PartialEq)]
 pub struct ClippyOutput {
     buf: String,
+
+    // output_width >= 5
     output_width: u16,
 
     // Incomplete last line without vertical bars
@@ -37,6 +39,7 @@ pub struct ClippyOutput {
 
     // Length of line in chars. Since this is the number of characters, the displayed width may be
     // different. For example, combining characters will cause lines to appear shorter.
+    // line_char_length <= self.output_width - 4
     line_char_length: u16,
 }
 
@@ -61,8 +64,18 @@ impl ClippyOutput {
 
     pub fn add_str(&mut self, s: &str) {
         for char in s.chars() {
-            self.line.push(char);
-            self.line_char_length += 1;
+            if char == '\n' {
+                self.buf.push_str("| ");
+                self.buf.push_str(&take(&mut self.line));
+                for _ in 0..self.output_width - 4 - self.line_char_length {
+                    self.buf.push(' ');
+                }
+                self.line_char_length = 0;
+                self.buf.push_str(" |\n");
+            } else {
+                self.line.push(char);
+                self.line_char_length += 1;
+            }
 
             if self.line_char_length == self.output_width - 4 {
                 self.buf.push_str("| ");
@@ -115,12 +128,13 @@ mod tests {
     #[test]
     fn clippy_output() {
         {
+            // Minimum output width
             let mut clippy = ClippyOutput::new(0);
             let result: String = clippy.by_ref().collect();
             assert_eq!(result, CLIPPY_ART.to_string() + "/‾  \\\n");
 
             clippy.finish();
-            let result: String = clippy.collect();
+            let result: String = clippy.by_ref().collect();
             assert_eq!(result, "\\___/\n");
         }
         {
@@ -134,6 +148,7 @@ mod tests {
             assert_eq!(result, "\\___/\n");
         }
         {
+            // Wrap line
             let mut clippy = ClippyOutput::new(0);
             clippy.add_str("aa");
             clippy.finish();
@@ -143,6 +158,42 @@ mod tests {
                 result,
                 CLIPPY_ART.to_string() + "/‾  \\\n| a |\n| a |\n\\___/\n"
             );
+        }
+        {
+            // Output width = 6
+            let mut clippy = ClippyOutput::new(6);
+            clippy.add_str("aa");
+            clippy.finish();
+
+            let result: String = clippy.collect();
+            assert_eq!(
+                result,
+                CLIPPY_ART.to_string() + "/‾  ‾\\\n| aa |\n\\____/\n"
+            );
+        }
+        {
+            // Append string
+            let mut clippy = ClippyOutput::new(6);
+            clippy.add_str("a");
+            let result: String = clippy.by_ref().collect();
+            assert_eq!(result, CLIPPY_ART.to_string() + "/‾  ‾\\\n");
+
+            clippy.add_str("a");
+            clippy.finish();
+            let result: String = clippy.collect();
+            assert_eq!(result, "| aa |\n\\____/\n");
+        }
+        {
+            // Newline in string
+            let mut clippy = ClippyOutput::new(6);
+            clippy.add_str("a\n");
+            let result: String = clippy.by_ref().collect();
+            assert_eq!(result, CLIPPY_ART.to_string() + "/‾  ‾\\\n| a  |\n");
+
+            clippy.add_str("b");
+            clippy.finish();
+            let result: String = clippy.collect();
+            assert_eq!(result, "| b  |\n\\____/\n");
         }
     }
 }
