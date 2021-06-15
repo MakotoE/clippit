@@ -16,6 +16,7 @@ use std::mem::take;
  */
 
 // https://github.com/gbigwood/Clippo
+// TODO fuzz test
 
 const CLIPPY_ART: &str = r#"/‾‾\
 |  |
@@ -65,40 +66,45 @@ impl ClippyOutput {
     pub fn add_str(&mut self, s: &str) {
         for char in s.chars() {
             if char == '\n' {
-                self.buf.push_str("| ");
-                self.buf.push_str(&take(&mut self.line));
-                for _ in 0..self.output_width - 4 - self.line_char_length {
-                    self.buf.push(' ');
-                }
+                ClippyOutput::add_string_to_buffer(
+                    &mut self.buf,
+                    &self.line,
+                    self.output_width - 4 - self.line_char_length,
+                );
+                self.line.clear();
                 self.line_char_length = 0;
-                self.buf.push_str(" |\n");
             } else {
                 self.line.push(char);
                 self.line_char_length += 1;
             }
 
             if self.line_char_length == self.output_width - 4 {
-                self.buf.push_str("| ");
-                self.buf.push_str(&take(&mut self.line));
+                ClippyOutput::add_string_to_buffer(&mut self.buf, &self.line, 0);
+                self.line.clear();
                 self.line_char_length = 0;
-                self.buf.push_str(" |\n");
             }
         }
+    }
+
+    fn add_string_to_buffer(buf: &mut String, line: &str, space_count: u16) {
+        buf.push_str("| ");
+        buf.push_str(&line);
+        for _ in 0..space_count {
+            buf.push(' ');
+        }
+        buf.push_str(" |\n");
     }
 
     /// `add_str()` or `finish()` should not be called after `finish()`.
     pub fn finish(&mut self) {
         if !self.line.is_empty() {
-            let line_length = self.line.chars().count() as u16;
-            self.buf.push_str("| ");
-            self.buf.push_str(&take(&mut self.line));
+            ClippyOutput::add_string_to_buffer(
+                &mut self.buf,
+                &self.line,
+                self.output_width - 4 - self.line.chars().count() as u16,
+            );
+            self.line.clear();
             self.line_char_length = 0;
-
-            for _ in 0..self.output_width - 4 - line_length {
-                self.buf.push(' ');
-            }
-
-            self.buf.push_str(" |\n");
         }
 
         self.buf.push('\\');
