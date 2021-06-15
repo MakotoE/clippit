@@ -30,7 +30,7 @@ const CLIPPY_ART: &str = r#"/‾‾\
 #[derive(Default, Clone, PartialOrd, PartialEq)]
 pub struct ClippyOutput {
     buf: String,
-    terminal_width: u16,
+    output_width: u16,
 
     // Incomplete last line without vertical bars
     line: String,
@@ -41,19 +41,19 @@ pub struct ClippyOutput {
 }
 
 impl ClippyOutput {
-    pub fn new(mut terminal_width: u16) -> Self {
-        if terminal_width < 5 {
-            terminal_width = 5;
+    pub fn new(mut output_width: u16) -> Self {
+        if output_width < 5 {
+            output_width = 5;
         }
 
         let mut s = CLIPPY_ART.to_string() + "/‾  ";
-        for _ in 0..terminal_width - 5 {
-            s.push('_');
+        for _ in 0..output_width - 5 {
+            s.push('‾');
         }
         s.push_str("\\\n");
         Self {
             buf: s,
-            terminal_width,
+            output_width,
             line: String::new(),
             line_char_length: 0,
         }
@@ -64,7 +64,7 @@ impl ClippyOutput {
             self.line.push(char);
             self.line_char_length += 1;
 
-            if self.line_char_length == self.terminal_width - 4 {
+            if self.line_char_length == self.output_width - 4 {
                 self.buf.push_str("| ");
                 self.buf.push_str(&take(&mut self.line));
                 self.line_char_length = 0;
@@ -80,7 +80,7 @@ impl ClippyOutput {
             self.buf.push_str(&take(&mut self.line));
             self.line_char_length = 0;
 
-            for _ in 0..self.terminal_width - 4 - line_length {
+            for _ in 0..self.output_width - 4 - line_length {
                 self.buf.push(' ');
             }
 
@@ -88,10 +88,10 @@ impl ClippyOutput {
         }
 
         self.buf.push('\\');
-        for _ in 0..self.terminal_width - 2 {
+        for _ in 0..self.output_width - 2 {
             self.buf.push('_');
         }
-        self.buf.push('/');
+        self.buf.push_str("/\n");
     }
 }
 
@@ -121,7 +121,7 @@ mod tests {
 
             clippy.finish();
             let result: String = clippy.collect();
-            assert_eq!(result, "\\___/");
+            assert_eq!(result, "\\___/\n");
         }
         {
             let mut clippy = ClippyOutput::new(0);
@@ -131,7 +131,7 @@ mod tests {
 
             clippy.finish();
             let result: String = clippy.collect();
-            assert_eq!(result, "\\___/");
+            assert_eq!(result, "\\___/\n");
         }
         {
             let mut clippy = ClippyOutput::new(0);
@@ -141,7 +141,7 @@ mod tests {
             let result: String = clippy.collect();
             assert_eq!(
                 result,
-                CLIPPY_ART.to_string() + "/‾  \\\n| a |\n| a |\n\\___/"
+                CLIPPY_ART.to_string() + "/‾  \\\n| a |\n| a |\n\\___/\n"
             );
         }
     }
