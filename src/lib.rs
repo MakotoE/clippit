@@ -60,14 +60,14 @@ impl ClippyOutput {
     }
 
     pub fn add_str(&mut self, s: &str) {
-        let mut i = self.line_char_length;
         for char in s.chars() {
             self.line.push(char);
+            self.line_char_length += 1;
 
-            i += 1;
-            if i == self.terminal_width - 4 {
+            if self.line_char_length == self.terminal_width - 4 {
                 self.buf.push_str("| ");
                 self.buf.push_str(&take(&mut self.line));
+                self.line_char_length = 0;
                 self.buf.push_str(" |\n");
             }
         }
@@ -78,6 +78,7 @@ impl ClippyOutput {
             let line_length = self.line.chars().count() as u16;
             self.buf.push_str("| ");
             self.buf.push_str(&take(&mut self.line));
+            self.line_char_length = 0;
 
             for _ in 0..self.terminal_width - 4 - line_length {
                 self.buf.push(' ');
