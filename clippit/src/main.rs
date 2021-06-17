@@ -1,10 +1,15 @@
 use anyhow::{Error, Result};
 use clippy_output::ClippyOutput;
 use std::io::Read;
-use std::process::{Command, Stdio};
+use std::process::{Command, ExitStatus, Stdio};
 use terminal_size::terminal_size;
 
 fn main() -> Result<()> {
+    std::process::exit(if run()?.success() { 0 } else { 1 })
+}
+
+/// Returns exit status of child process
+fn run() -> Result<ExitStatus> {
     let mut child = Command::new("cargo")
         .args(&["clippy"])
         .stderr(Stdio::piped())
@@ -39,9 +44,5 @@ fn main() -> Result<()> {
         print!("{}", s);
     }
 
-    if output.status.success() {
-        Ok(())
-    } else {
-        Err(Error::msg(""))
-    }
+    Ok(output.status)
 }

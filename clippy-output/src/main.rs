@@ -8,8 +8,8 @@ fn main() -> Result<()> {
     let mut stdin = stdin.lock();
     let mut line = String::new();
 
-    let (width, _) = terminal_size().ok_or_else(|| Error::msg("not a tty"))?;
-    let mut clippy = ClippyOutput::new(u16::min(width.0, 100));
+    let width = u16::min(terminal_size().map(|a| a.0 .0).unwrap_or(100), 100);
+    let mut clippy = ClippyOutput::new(width);
 
     loop {
         if stdin.read_to_string(&mut line)? == 0 {
