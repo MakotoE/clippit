@@ -7,6 +7,7 @@
       <excludeFolder url="file://$MODULE_DIR$/clippy-output/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/clippit/target" />
+      <excludeFolder url="file://$MODULE_DIR$/clippy-output/fuzz/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

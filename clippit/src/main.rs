@@ -28,6 +28,8 @@ fn run() -> Result<ExitStatus> {
             break;
         }
 
+        // TODO replace words with clippy-like words
+
         clippy.add_str(&line);
         line.clear();
 

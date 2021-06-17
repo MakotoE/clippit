@@ -16,7 +16,6 @@ use std::mem::take;
  */
 
 // https://github.com/gbigwood/Clippo
-// TODO fuzz test
 
 const CLIPPY_ART: &str = r#"/‾‾\
 |  |
