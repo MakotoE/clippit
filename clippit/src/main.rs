@@ -1,40 +1,38 @@
 use anyhow::Result;
 use clippy_output::ClippyOutput;
-use regex::Regex;
+use regex::{Captures, Regex};
 use std::borrow::Cow;
-use std::process::{Command, ExitStatus, Stdio};
+use std::io::{stdin, Read};
 use terminal_size::terminal_size;
 
 fn main() -> Result<()> {
-    std::process::exit(if run()?.success() { 0 } else { 1 })
-}
-
-/// Returns exit status of child process
-fn run() -> Result<ExitStatus> {
-    let output = Command::new("cargo")
-        .args(&["clippy"])
-        .stderr(Stdio::piped())
-        .output()?;
+    let mut line = String::new();
+    stdin().read_to_string(&mut line)?;
 
     let width = u16::min(terminal_size().map(|a| a.0 .0).unwrap_or(100), 120);
     let mut clippy = ClippyOutput::new(width);
 
-    let str = replace_words(std::str::from_utf8(&output.stderr)?);
-    clippy.add_str(&str);
+    clippy.add_str(&replace_words(&line));
     clippy.finish();
     for s in clippy {
         print!("{}", s);
     }
-
-    Ok(output.status)
+    Ok(())
 }
 
 fn replace_words(s: &str) -> String {
     // Replace "Checking"
-    let mut result = if let Some(n) = s.find(|c: char| c == '\n' || c == '\r') {
-        s[..n].replacen("    Checking", "I'm checking", 1) + "...\n" + &s[n..]
+    let trimmed = s.trim_start();
+    let mut result = if let Some(after_checking) = trimmed.strip_prefix("Checking") {
+        let newline_index = after_checking
+            .find("\n")
+            .unwrap_or(after_checking.len() - 1);
+        "I'm checking".to_string()
+            + &after_checking[..newline_index]
+            + "..."
+            + &after_checking[newline_index..]
     } else {
-        s.to_string()
+        trimmed.to_string()
     };
 
     if result.contains("could not compile") {
@@ -61,25 +59,19 @@ fn replace_words(s: &str) -> String {
             result = s;
         }
     } else {
-        // The cargo clippy output can contain either:
-        // 2 or more "warning:"
-        // 2 or more "error:"
-        // none of the above
-        //
-        // If the string contains "warning:" or "error:", the last match should not be changed
-
-        let error_count = result.matches("error:").count();
-        if error_count > 0 {
-            result = result.replacen("error:", "Hmmm... ", error_count - 1);
-        } else {
-            let warning_count = s.matches("warning:").count();
-            if warning_count > 0 {
-                result = result.replacen(
-                    "warning:",
-                    "It looks like this could be improved because",
-                    warning_count - 1,
-                );
-            }
+        if let Cow::Owned(s) =
+            Regex::new("(warning|error):(.*)")
+                .unwrap()
+                .replace_all(&result, |caps: &Captures| {
+                    if caps[0].ends_with("warnings emitted") || caps[0].ends_with("errors emitted")
+                    {
+                        (&caps[0]).to_string()
+                    } else {
+                        "It looks like this could be improved because".to_string() + &caps[2] + "."
+                    }
+                })
+        {
+            result = s;
         }
     }
 
