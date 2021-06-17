@@ -1,5 +1,7 @@
 use anyhow::Result;
 use clippy_output::ClippyOutput;
+use regex::Regex;
+use std::borrow::Cow;
 use std::process::{Command, ExitStatus, Stdio};
 use terminal_size::terminal_size;
 
@@ -38,16 +40,26 @@ fn replace_words(s: &str) -> String {
     if result.contains("could not compile") {
         // Compilation error
 
-        result.replace(
+        result = result.replace(
             "error: aborting due to previous error",
-            "Sorry, but I can't compile with that error!",
+            "Sorry, but I cannot continue compiling with that error.",
         );
 
-        result = result.replacen(
-            "error: expected",
-            "Hmmm... The syntax is wrong because I expected",
-            error_count - 1,
-        );
+        if let Cow::Owned(s) = Regex::new("error: could not compile (.*)")
+            .unwrap()
+            .replace_all(&result, "Let's fix $1!")
+        {
+            result = s;
+        }
+
+        result = result.replace("error: expected", "The syntax is wrong because I expected");
+
+        if let Cow::Owned(s) = Regex::new(r#"error\[\S+]:"#)
+            .unwrap()
+            .replace_all(&result, "Oops!")
+        {
+            result = s;
+        }
     } else {
         // The cargo clippy output can contain either:
         // 2 or more "warning:"
