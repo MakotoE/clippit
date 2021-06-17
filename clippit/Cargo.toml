@@ -5,3 +5,6 @@ authors = ["Makoto <makoto@emurasoft.com>"]
 edition = "2018"
 
 [dependencies]
+anyhow = "1.0"
+terminal_size = "0.1"
+clippy-output = { path = "../clippy-output" }

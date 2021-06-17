@@ -17,12 +17,11 @@ fn main() -> Result<()> {
         }
 
         clippy.add_str(&line);
+        line.clear();
 
         for s in clippy.by_ref() {
             print!("{}", s);
         }
-
-        line.clear();
     }
 
     clippy.finish();
