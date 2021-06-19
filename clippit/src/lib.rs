@@ -78,10 +78,13 @@ pub fn replace_words(s: &str) -> String {
     }
 
     // "Finished..."
-    let last_line_index = result[..result.len() - 1]
-        .rfind("\n")
-        .unwrap_or(result.len() - 1)
-        + 1;
+    let last_line_index = match result[..result.len().saturating_sub(1)].rfind("\n") {
+        Some(n) => n + 1,
+        None => result.len().saturating_sub(1),
+    };
+
+    // .unwrap_or(result.len() - 2)
+    // + 1;
     const FINISHED: &str = "    Finished";
     if result[last_line_index..].starts_with(FINISHED) {
         result.replace_range(
@@ -103,6 +106,7 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
+    #[case("", "")]
     #[case(
         r#"    Checking playground v0.0.1 (/playground)
     Finished dev [unoptimized + debuginfo] target(s) in 1.40s
