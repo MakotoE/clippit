@@ -36,7 +36,6 @@ fn replace_words(s: &str) -> String {
 
     if result.contains("could not compile") {
         // Compilation error
-
         result = result.replace(
             "error: aborting due to previous error",
             "Sorry, but I cannot continue compiling with that error.",
@@ -49,7 +48,12 @@ fn replace_words(s: &str) -> String {
             result = s;
         }
 
-        result = result.replace("error: expected", "The syntax is wrong because I expected");
+        if let Cow::Owned(s) = Regex::new("error: expected (.*)")
+            .unwrap()
+            .replace_all(&result, "The syntax is wrong because I expected $1.")
+        {
+            result = s;
+        }
 
         if let Cow::Owned(s) = Regex::new(r"error\[\S+]:")
             .unwrap()
@@ -65,8 +69,10 @@ fn replace_words(s: &str) -> String {
                 .replace_all(&result, |caps: &Captures| {
                     if let Some(s) = caps[2].strip_suffix(" warnings emitted") {
                         "You have".to_string() + s + " issues in your code."
-                    } else {
+                    } else if caps[2].contains(".") {
                         "It looks like this could be improved because".to_string() + &caps[2] + "."
+                    } else {
+                        "Hmmm...".to_string() + &caps[2]
                     }
                 })
         {
@@ -86,6 +92,8 @@ fn replace_words(s: &str) -> String {
         {
             result = s;
         }
+
+        result = result.replace("^ help: ", "^ You should ");
     }
 
     // "Finished..."
@@ -120,6 +128,81 @@ mod tests {
 "#,
         r#"I'm checking playground v0.0.1 (/playground)...
 I finished compiling dev [unoptimized + debuginfo] target(s) in 1.40s.
+"#
+    )]
+    #[case(
+        r#"    Checking playground v0.0.1 (/playground)
+error: expected expression, found `.`
+ --> src/main.rs:2:5
+  |
+2 |     .
+  |     ^ expected expression
+
+error: aborting due to previous error
+
+error: could not compile `playground`
+
+To learn more, run the command again with --verbose.
+"#,
+        r#"I'm checking playground v0.0.1 (/playground)...
+The syntax is wrong because I expected expression, found `.`.
+ --> src/main.rs:2:5
+  |
+2 |     .
+  |     ^ expected expression
+
+Sorry, but I cannot continue compiling with that error.
+
+Let's fix `playground`!
+
+To learn more, run the command again with --verbose.
+"#
+    )]
+    #[case(
+        r#"    Checking playground v0.0.1 (/playground)
+warning: unnecessary trailing semicolon
+ --> src/main.rs:2:27
+  |
+2 |     println!("{}", ((0)));;
+  |                           ^ help: remove this semicolon
+  |
+  = note: `#[warn(redundant_semicolons)]` on by default
+
+warning: consider removing unnecessary double parentheses
+ --> src/main.rs:2:20
+  |
+2 |     println!("{}", ((0)));;
+  |                    ^^^^^
+  |
+  = note: `#[warn(clippy::double_parens)]` on by default
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#double_parens
+
+warning: 2 warnings emitted
+
+    Finished dev [unoptimized + debuginfo] target(s) in 0.54s
+"#,
+        r#"I'm checking playground v0.0.1 (/playground)...
+Hmmm... unnecessary trailing semicolon
+ --> src/main.rs:2:27
+  |
+2 |     println!("{}", ((0)));;
+  |                           ^ You should remove this semicolon
+  |
+  Note: `#[warn(redundant_semicolons)]` on by default.
+
+Hmmm... consider removing unnecessary double parentheses
+ --> src/main.rs:2:20
+  |
+2 |     println!("{}", ((0)));;
+  |                    ^^^^^
+  |
+  Note: `#[warn(clippy::double_parens)]` on by default.
+  Would you like help with this? Visit
+  https://rust-lang.github.io/rust-clippy/master/index.html#double_parens.
+
+You have 2 issues in your code.
+
+I finished compiling dev [unoptimized + debuginfo] target(s) in 0.54s.
 "#
     )]
     fn test_replace_words(#[case] input: &str, #[case] expected: &str) {
