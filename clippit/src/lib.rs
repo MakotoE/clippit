@@ -13,34 +13,7 @@ pub fn replace_words(s: &str) -> String {
         s.trim_start().to_string()
     };
 
-    if result.contains("could not compile") {
-        // Compilation error
-        result = result.replace(
-            "error: aborting due to previous error",
-            "Sorry, but I cannot continue compiling with that error.",
-        );
-
-        if let Cow::Owned(s) = Regex::new("error: could not compile (.*)")
-            .unwrap()
-            .replace_all(&result, "Let's fix $1!")
-        {
-            result = s;
-        }
-
-        if let Cow::Owned(s) = Regex::new("error: expected (.*)")
-            .unwrap()
-            .replace_all(&result, "The syntax is wrong because I expected $1.")
-        {
-            result = s;
-        }
-
-        if let Cow::Owned(s) = Regex::new(r"error\[\S+]:")
-            .unwrap()
-            .replace_all(&result, "Oops!")
-        {
-            result = s;
-        }
-    } else {
+    if result.contains("https://rust-lang.github.io/rust-clippy/") && result.contains("clippy::") {
         // cargo clippy output
         if let Cow::Owned(s) =
             Regex::new("(warning|error):(.*)")
@@ -73,6 +46,33 @@ pub fn replace_words(s: &str) -> String {
         }
 
         result = result.replace("^ help: ", "^ You should ");
+    } else {
+        // Compilation error or no clippy output
+        result = result.replace(
+            "error: aborting due to previous error",
+            "Sorry, but I cannot continue compiling with that error.",
+        );
+
+        if let Cow::Owned(s) = Regex::new("error: could not compile (.*)")
+            .unwrap()
+            .replace_all(&result, "Let's fix $1!")
+        {
+            result = s;
+        }
+
+        if let Cow::Owned(s) = Regex::new("error: expected (.*)")
+            .unwrap()
+            .replace_all(&result, "The syntax is wrong because I expected $1.")
+        {
+            result = s;
+        }
+
+        if let Cow::Owned(s) = Regex::new(r"error\[\S+]:")
+            .unwrap()
+            .replace_all(&result, "Oops!")
+        {
+            result = s;
+        }
     }
 
     // "Finished..."
@@ -81,8 +81,6 @@ pub fn replace_words(s: &str) -> String {
         None => result.len(),
     };
 
-    // .unwrap_or(result.len() - 2)
-    // + 1;
     const FINISHED: &str = "    Finished";
     if result[last_line_index..].starts_with(FINISHED) {
         result.replace_range(
@@ -127,6 +125,7 @@ error: could not compile `playground`
 
 To learn more, run the command again with --verbose.
 "#,
+        // Expected
         r#"I'm checking playground v0.0.1 (/playground)...
 The syntax is wrong because I expected expression, found `.`.
  --> src/main.rs:2:5
@@ -142,7 +141,7 @@ To learn more, run the command again with --verbose.
 "#
     )]
     #[case(
-    r#"    Checking playground v0.0.1 (/playground)
+        r#"    Checking playground v0.0.1 (/playground)
 warning: unnecessary trailing semicolon
  --> src/main.rs:2:27
   |
@@ -164,7 +163,8 @@ warning: 2 warnings emitted
 
     Finished dev [unoptimized + debuginfo] target(s) in 0.54s
 "#,
-    r#"I'm checking playground v0.0.1 (/playground)...
+        // Expected
+        r#"I'm checking playground v0.0.1 (/playground)...
 Hmmm... unnecessary trailing semicolon
  --> src/main.rs:2:27
   |
@@ -186,6 +186,136 @@ Hmmm... consider removing unnecessary double parentheses
 You have 2 issues in your code.
 
 I finished compiling dev [unoptimized + debuginfo] target(s) in 0.54s.
+"#
+    )]
+    #[case(
+        r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
+warning: value assigned to `a` is never read
+ --> src/main.rs:3:13
+  |
+3 |     let mut a = 0;
+  |             ^
+  |
+  = note: `#[warn(unused_assignments)]` on by default
+  = help: maybe it is overwritten before being read?
+
+warning: value assigned to `b` is never read
+ --> src/main.rs:6:5
+  |
+6 |     b = a;
+  |     ^
+  |
+  = help: maybe it is overwritten before being read?
+
+warning: unused variable: `pi`
+ --> src/main.rs:7:9
+  |
+7 |     let pi = 3.14;
+  |         ^^ help: if this is intentional, prefix it with an underscore: `_pi`
+  |
+  = note: `#[warn(unused_variables)]` on by default
+
+error: this looks like you are trying to swap `a` and `b`
+ --> src/main.rs:5:5
+  |
+5 | /     a = b;
+6 | |     b = a;
+  | |_________^ help: try: `std::mem::swap(&mut a, &mut b)`
+  |
+  = note: `#[deny(clippy::almost_swapped)]` on by default
+  = note: or maybe you should use `std::mem::replace`?
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#almost_swapped
+
+error: this comparison involving the minimum or maximum element for this type contains a case that is always true or always false
+ --> src/main.rs:2:8
+  |
+2 |     if 100 > i32::MAX {}
+  |        ^^^^^^^^^^^^^^
+  |
+  = note: `#[deny(clippy::absurd_extreme_comparisons)]` on by default
+  = help: because `i32::MAX` is the maximum value for this type, this comparison is always false
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#absurd_extreme_comparisons
+
+error: approximate value of `f{32, 64}::consts::PI` found. Consider using it directly
+ --> src/main.rs:7:14
+  |
+7 |     let pi = 3.14;
+  |              ^^^^
+  |
+  = note: `#[deny(clippy::approx_constant)]` on by default
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant
+
+error: aborting due to 3 previous errors; 3 warnings emitted
+
+error: could not compile `rs-test`
+
+To learn more, run the command again with --verbose.
+"#,
+    // Expected
+        r#"I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...
+Hmmm... value assigned to `a` is never read
+ --> src/main.rs:3:13
+  |
+3 |     let mut a = 0;
+  |             ^
+  |
+  Note: `#[warn(unused_assignments)]` on by default.
+  = help: maybe it is overwritten before being read?
+
+Hmmm... value assigned to `b` is never read
+ --> src/main.rs:6:5
+  |
+6 |     b = a;
+  |     ^
+  |
+  = help: maybe it is overwritten before being read?
+
+Hmmm... unused variable: `pi`
+ --> src/main.rs:7:9
+  |
+7 |     let pi = 3.14;
+  |         ^^ You should if this is intentional, prefix it with an underscore: `_pi`
+  |
+  Note: `#[warn(unused_variables)]` on by default.
+
+Hmmm... this looks like you are trying to swap `a` and `b`
+ --> src/main.rs:5:5
+  |
+5 | /     a = b;
+6 | |     b = a;
+  | |_________^ You should try: `std::mem::swap(&mut a, &mut b)`
+  |
+  Note: `#[deny(clippy::almost_swapped)]` on by default.
+  Note: or maybe you should use `std::mem::replace`?.
+  Would you like help with this? Visit
+  https://rust-lang.github.io/rust-clippy/master/index.html#almost_swapped.
+
+Hmmm... this comparison involving the minimum or maximum element for this type contains a case that is always true or always false
+ --> src/main.rs:2:8
+  |
+2 |     if 100 > i32::MAX {}
+  |        ^^^^^^^^^^^^^^
+  |
+  Note: `#[deny(clippy::absurd_extreme_comparisons)]` on by default.
+  = help: because `i32::MAX` is the maximum value for this type, this comparison is always false
+  Would you like help with this? Visit
+  https://rust-lang.github.io/rust-clippy/master/index.html#absurd_extreme_comparisons.
+
+It looks like this could be improved because approximate value of `f{32, 64}::consts::PI` found. Consider using it directly.
+ --> src/main.rs:7:14
+  |
+7 |     let pi = 3.14;
+  |              ^^^^
+  |
+  Note: `#[deny(clippy::approx_constant)]` on by default.
+  Would you like help with this? Visit
+  https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant.
+
+You have aborting due to 3 previous errors; 3 issues in your code.
+
+Hmmm... could not compile `rs-test`
+
+To learn more, run the command again with --verbose.
 "#
     )]
     fn test_replace_words(#[case] input: &str, #[case] expected: &str) {
