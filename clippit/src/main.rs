@@ -72,6 +72,20 @@ fn replace_words(s: &str) -> String {
         {
             result = s;
         }
+
+        if let Cow::Owned(s) = Regex::new("= note: (.*)")
+            .unwrap()
+            .replace_all(&result, "Note: $1.")
+        {
+            result = s;
+        }
+
+        if let Cow::Owned(s) = Regex::new("= help: for further information visit (.*)")
+            .unwrap()
+            .replace_all(&result, "Would you like help with this? Visit\n  $1.")
+        {
+            result = s;
+        }
     }
 
     // "Finished..."
