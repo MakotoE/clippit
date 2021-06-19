@@ -51,7 +51,7 @@ fn replace_words(s: &str) -> String {
 
         result = result.replace("error: expected", "The syntax is wrong because I expected");
 
-        if let Cow::Owned(s) = Regex::new(r#"error\[\S+]:"#)
+        if let Cow::Owned(s) = Regex::new(r"error\[\S+]:")
             .unwrap()
             .replace_all(&result, "Oops!")
         {
@@ -63,9 +63,8 @@ fn replace_words(s: &str) -> String {
             Regex::new("(warning|error):(.*)")
                 .unwrap()
                 .replace_all(&result, |caps: &Captures| {
-                    if caps[0].ends_with("warnings emitted") || caps[0].ends_with("errors emitted")
-                    {
-                        (&caps[0]).to_string()
+                    if let Some(s) = caps[2].strip_suffix(" warnings emitted") {
+                        "You have".to_string() + s + " issues in your code."
                     } else {
                         "It looks like this could be improved because".to_string() + &caps[2] + "."
                     }
