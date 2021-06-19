@@ -22,8 +22,7 @@ fn main() -> Result<()> {
 
 fn replace_words(s: &str) -> String {
     // Replace "Checking"
-    let trimmed = s.trim_start();
-    let mut result = if let Some(after_checking) = trimmed.strip_prefix("Checking") {
+    let mut result = if let Some(after_checking) = s.trim_start().strip_prefix("    Checking") {
         let newline_index = after_checking
             .find("\n")
             .unwrap_or(after_checking.len() - 1);
@@ -32,7 +31,7 @@ fn replace_words(s: &str) -> String {
             + "..."
             + &after_checking[newline_index..]
     } else {
-        trimmed.to_string()
+        s.trim_start().to_string()
     };
 
     if result.contains("could not compile") {
@@ -59,6 +58,7 @@ fn replace_words(s: &str) -> String {
             result = s;
         }
     } else {
+        // cargo clippy output
         if let Cow::Owned(s) =
             Regex::new("(warning|error):(.*)")
                 .unwrap()
@@ -72,6 +72,23 @@ fn replace_words(s: &str) -> String {
                 })
         {
             result = s;
+        }
+    }
+
+    // "Finished..."
+    let last_line_index = result[..result.len() - 1]
+        .rfind("\n")
+        .unwrap_or(result.len() - 1)
+        + 1;
+    const FINISHED: &str = "    Finished";
+    if result[last_line_index..].starts_with(FINISHED) {
+        result.replace_range(
+            last_line_index..last_line_index + FINISHED.len(),
+            "I finished compiling",
+        );
+
+        if result.ends_with("\n") {
+            result.insert(result.len() - 1, '.');
         }
     }
 
