@@ -22,7 +22,7 @@ fn main() -> Result<()> {
 
 fn replace_words(s: &str) -> String {
     // Replace "Checking"
-    let mut result = if let Some(after_checking) = s.trim_start().strip_prefix("    Checking") {
+    let mut result = if let Some(after_checking) = s.strip_prefix("    Checking") {
         let newline_index = after_checking
             .find("\n")
             .unwrap_or(after_checking.len() - 1);
@@ -106,4 +106,23 @@ fn replace_words(s: &str) -> String {
     }
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case(
+        r#"    Checking playground v0.0.1 (/playground)
+    Finished dev [unoptimized + debuginfo] target(s) in 1.40s
+"#,
+        r#"I'm checking playground v0.0.1 (/playground)...
+I finished compiling dev [unoptimized + debuginfo] target(s) in 1.40s.
+"#
+    )]
+    fn test_replace_words(#[case] input: &str, #[case] expected: &str) {
+        assert_eq!(replace_words(input), expected);
+    }
 }

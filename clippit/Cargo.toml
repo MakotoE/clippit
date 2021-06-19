@@ -9,3 +9,4 @@ anyhow = "1.0"
 terminal_size = "0.1"
 clippy-output = { path = "../clippy-output" }
 regex = "1.5"
+rstest = "0.10"
