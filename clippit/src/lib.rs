@@ -4,9 +4,7 @@ use std::borrow::Cow;
 pub fn replace_words(s: &str) -> String {
     // Replace "Checking"
     let mut result = if let Some(after_checking) = s.strip_prefix("    Checking") {
-        let newline_index = after_checking
-            .find("\n")
-            .unwrap_or(after_checking.len() - 1);
+        let newline_index = after_checking.find("\n").unwrap_or(after_checking.len());
         "I'm checking".to_string()
             + &after_checking[..newline_index]
             + "..."
@@ -78,9 +76,9 @@ pub fn replace_words(s: &str) -> String {
     }
 
     // "Finished..."
-    let last_line_index = match result[..result.len().saturating_sub(1)].rfind("\n") {
+    let last_line_index = match result.strip_suffix("\n").unwrap_or(&result).rfind("\n") {
         Some(n) => n + 1,
-        None => result.len().saturating_sub(1),
+        None => result.len(),
     };
 
     // .unwrap_or(result.len() - 2)
