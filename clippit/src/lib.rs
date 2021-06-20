@@ -1,5 +1,6 @@
-use regex::{Captures, Regex};
+use regex::{Captures, Regex, Replacer};
 use std::borrow::Cow;
+use std::mem::swap;
 
 pub fn replace_words(s: &str) -> String {
     // Replace "Checking"
@@ -10,106 +11,26 @@ pub fn replace_words(s: &str) -> String {
             + "..."
             + &after_checking[newline_index..]
     } else {
-        s.trim_start().to_string()
+        s.to_string()
     };
 
-    if let Cow::Owned(s) = Regex::new(r"error: aborting due to previous error")
-        .unwrap()
-        .replace(
-            &result,
-            "Sorry, but I cannot continue compiling with that error.",
-        )
-    {
-        result = s;
-    }
+    regex_replace_once(
+        &mut result,
+        r"error: aborting due to previous error",
+        "Sorry, but I cannot continue compiling with that error.",
+    );
 
-    if let Cow::Owned(s) =
-        Regex::new(r"error: aborting due to \d* previous errors; \d* warnings emitted")
-            .unwrap()
-            .replace(&result, "Sorry, but you have too many errors in your code.")
-    {
-        result = s;
-    }
+    regex_replace_once(
+        &mut result,
+        r"error: aborting due to \d* previous errors; \d* warnings emitted",
+        "Sorry, but you have too many errors in your code.",
+    );
 
-    if let Cow::Owned(s) = Regex::new("error: could not compile (.*)")
-        .unwrap()
-        .replace_all(&result, "Let's fix $1!")
-    {
-        result = s;
-    }
-
-    if result.contains("https://rust-lang.github.io/rust-clippy/") && result.contains("clippy::") {
-        // cargo clippy output
-        if let Cow::Owned(s) =
-            Regex::new("(warning|error):(.*)")
-                .unwrap()
-                .replace_all(&result, |caps: &Captures| {
-                    if let Some(s) = caps[2].strip_suffix(" warnings emitted") {
-                        "You have".to_string() + s + " issues in your code."
-                    } else if caps[2].contains(".") {
-                        "It looks like this could be improved because".to_string() + &caps[2] + "."
-                    } else {
-                        "Hmmm...".to_string() + &caps[2] + "."
-                    }
-                })
-        {
-            result = s;
-        }
-
-        if let Cow::Owned(s) =
-            Regex::new("= note:(.*)")
-                .unwrap()
-                .replace_all(&result, |caps: &Captures| {
-                    let mut result = "Note:".to_string() + &caps[1];
-                    if !caps[1].ends_with("?") {
-                        result.push('.')
-                    }
-                    result
-                })
-        {
-            result = s;
-        }
-
-        if let Cow::Owned(s) = Regex::new("= help: for further information visit (.*)")
-            .unwrap()
-            .replace_all(&result, "Would you like help with this? Visit\n  $1.")
-        {
-            result = s;
-        }
-
-        if let Cow::Owned(s) =
-            Regex::new("= help:(.*)")
-                .unwrap()
-                .replace_all(&result, |caps: &Captures| {
-                    let mut result = "Hint:".to_string() + &caps[1];
-                    if !caps[1].ends_with("?") {
-                        result.push('.')
-                    }
-                    result
-                })
-        {
-            result = s;
-        }
-
-        result = result.replace("^ help: if", "^ If");
-
-        result = result.replace("^ help:", "^ You should");
-    } else {
-        // Compilation error or no clippy output
-        if let Cow::Owned(s) = Regex::new("error: expected (.*)")
-            .unwrap()
-            .replace_all(&result, "The syntax is wrong because I expected $1.")
-        {
-            result = s;
-        }
-
-        if let Cow::Owned(s) = Regex::new(r"error\[\S+]:")
-            .unwrap()
-            .replace_all(&result, "Oops!")
-        {
-            result = s;
-        }
-    }
+    regex_replace_once(
+        &mut result,
+        r"error: could not compile (.*)",
+        "Let's fix $1!",
+    );
 
     // "Finished..."
     let last_line_index = match result.strip_suffix("\n").unwrap_or(&result).rfind("\n") {
@@ -129,7 +50,73 @@ pub fn replace_words(s: &str) -> String {
         }
     }
 
+    if result.contains("https://rust-lang.github.io/rust-clippy/") && result.contains("clippy::") {
+        // cargo clippy output
+        regex_replace(&mut result, r"(warning|error):(.*)", |caps: &Captures| {
+            if let Some(s) = caps[2].strip_suffix(" warnings emitted") {
+                "You have".to_string() + s + " issues in your code."
+            } else if caps[2].contains(".") {
+                "It looks like this could be improved because".to_string() + &caps[2] + "."
+            } else {
+                "Hmmm...".to_string() + &caps[2] + "."
+            }
+        });
+
+        regex_replace(&mut result, r"= note:(.*)", |caps: &Captures| {
+            let mut result = "Note:".to_string() + &caps[1];
+            if !caps[1].ends_with("?") {
+                result.push('.')
+            }
+            result
+        });
+
+        regex_replace(
+            &mut result,
+            r"= help: for further information visit (.*)",
+            "Would you like help with this? Visit\n  $1.",
+        );
+
+        regex_replace(&mut result, r"= help:(.*)", |caps: &Captures| {
+            let mut result = "Hint:".to_string() + &caps[1];
+            if !caps[1].ends_with("?") {
+                result.push('.')
+            }
+            result
+        });
+
+        result = result.replace("^ help: if", "^ If");
+
+        result = result.replace("^ help:", "^ You should");
+    } else {
+        // Compilation error or no clippy output
+        regex_replace(
+            &mut result,
+            r"error: expected (.*)",
+            "The syntax is wrong because I expected $1.",
+        );
+
+        regex_replace(&mut result, r"error\[\S+]:", "Oops!");
+    }
+
     result
+}
+
+fn regex_replace<R>(str: &mut String, regex: &str, replacement: R)
+where
+    R: Replacer,
+{
+    if let Cow::Owned(mut s) = Regex::new(regex).unwrap().replace_all(&str, replacement) {
+        swap(str, &mut s);
+    }
+}
+
+fn regex_replace_once<R>(str: &mut String, regex: &str, replacement: R)
+where
+    R: Replacer,
+{
+    if let Cow::Owned(mut s) = Regex::new(regex).unwrap().replace(&str, replacement) {
+        swap(str, &mut s);
+    }
 }
 
 #[cfg(test)]
