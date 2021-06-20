@@ -9,19 +9,33 @@
 |\_/|
 \___/
   /\
-/‾  ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
-| Hmmm... unused variable: `a`.                                                                            |
-|  --> src/main.rs:2:9                                                                                     |
-|   |                                                                                                      |
-| 2 |     let a = 0;                                                                                       |
-|   |         ^ If this is intentional, prefix it with an underscore: `_a`                                 |
-|   |                                                                                                      |
-|   Note: `#[warn(unused_variables)]` on by default.                                                       |
-|                                                                                                          |
-| You have 1 issue in your code.                                                                           |
-|                                                                                                          |
-| I finished compiling dev [unoptimized + debuginfo] target(s) in 0.00s.                                   |
-\__________________________________________________________________________________________________________/
+/‾  ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
+| I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...                |
+| Hmmm... unused variable: `a`.                                                  |
+|  --> src/main.rs:2:9                                                           |
+|   |                                                                            |
+| 2 |     let a = 3.14;                                                          |
+|   |         ^ If this is intentional, prefix it with an underscore: `_a`       |
+|   |                                                                            |
+|   Note: `#[warn(unused_variables)]` on by default.                             |
+|                                                                                |
+| It looks like this could be improved because approximate value of `f{32, 64}:: |
+| consts::PI` found. Consider using it directly.                                 |
+|  --> src/main.rs:2:13                                                          |
+|   |                                                                            |
+| 2 |     let a = 3.14;                                                          |
+|   |             ^^^^                                                           |
+|   |                                                                            |
+|   Note: `#[deny(clippy::approx_constant)]` on by default.                      |
+|   Would you like help with this? Visit                                         |
+|   https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant.   |
+|                                                                                |
+| Sorry, but I cannot continue compiling with that error.                        |
+|                                                                                |
+| Let's fix `rs-test`!                                                           |
+|                                                                                |
+| To learn more, run the command again with --verbose.                           |
+\________________________________________________________________________________/
 ```
 
 Install with `cargo install clippit`, then in a Rust directory, run
@@ -30,7 +44,7 @@ Install with `cargo install clippit`, then in a Rust directory, run
 cargo clippy 2>&1 | clippit
 ```
 
-The `clippy-output` directory contains a library and command for adding just the Clippy ascii art to text.
+The `clippy-output` directory contains a library and command for adding just the Clippy ascii art to text, without replacing any words.
 
 Only tested with `rustc 1.53.0` and `clippy 0.1.53`.
 

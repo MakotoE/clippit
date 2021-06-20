@@ -16,7 +16,7 @@ pub fn replace_words(s: &str) -> String {
 
     regex_replace_once(
         &mut result,
-        r"error: aborting due to previous error",
+        r"error: aborting due to previous error.*",
         "Sorry, but I cannot continue compiling with that error.",
     );
 
@@ -140,7 +140,7 @@ error: expected expression, found `.`
 2 |     .
   |     ^ expected expression
 
-error: aborting due to previous error
+error: aborting due to previous error; 1 warning emitted
 
 error: could not compile `playground`
 
