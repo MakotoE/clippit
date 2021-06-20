@@ -36,6 +36,10 @@ const CLIPPY_ART: &str = r#"/‾‾\
   /\
 "#;
 
+/// Inputs a string and outputs ascii art of Clippy saying the text.
+///
+/// Call `add_str()` to input strings and call `finish()` at the end after all text as been added.
+/// `ClippyOutput` implements `Iterator` to return the output string.
 #[derive(Default, Clone, PartialOrd, PartialEq)]
 pub struct ClippyOutput {
     buf: String,
@@ -71,6 +75,7 @@ impl ClippyOutput {
         }
     }
 
+    /// Adds text to be processed.
     pub fn add_str(&mut self, s: &str) {
         for char in s.chars() {
             if char == '\n' {
@@ -103,7 +108,9 @@ impl ClippyOutput {
         buf.push_str(" |\n");
     }
 
-    /// `add_str()` or `finish()` should not be called after `finish()`.
+    /// Appends the last line of the speech bubble.
+    ///
+    /// `add_str()` or `finish()` should not be called after `finish()` was called.
     pub fn finish(&mut self) {
         if !self.line.is_empty() {
             ClippyOutput::add_string_to_buffer(
@@ -126,6 +133,8 @@ impl ClippyOutput {
 impl Iterator for ClippyOutput {
     type Item = String;
 
+    /// Returns `Some` if there is a string remaining in the buffer. Returns `None` if the buffer is
+    /// clear.
     fn next(&mut self) -> Option<String> {
         let result = take(&mut self.buf);
         if result.is_empty() {
