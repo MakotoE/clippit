@@ -45,7 +45,11 @@ pub fn replace_words(s: &str) -> String {
             result = s;
         }
 
-        result = result.replace("^ help: ", "^ You should ");
+        result = result.replace("= help:", "Hint:");
+
+        result = result.replace("^ help: if", "^ If");
+
+        result = result.replace("^ help:", "^ You should");
     } else {
         // Compilation error or no clippy output
         result = result.replace(
@@ -260,7 +264,7 @@ Hmmm... value assigned to `a` is never read
   |             ^
   |
   Note: `#[warn(unused_assignments)]` on by default.
-  = help: maybe it is overwritten before being read?
+  Hint: maybe it is overwritten before being read?
 
 Hmmm... value assigned to `b` is never read
  --> src/main.rs:6:5
@@ -268,13 +272,13 @@ Hmmm... value assigned to `b` is never read
 6 |     b = a;
   |     ^
   |
-  = help: maybe it is overwritten before being read?
+  Hint: maybe it is overwritten before being read?
 
 Hmmm... unused variable: `pi`
  --> src/main.rs:7:9
   |
 7 |     let pi = 3.14;
-  |         ^^ You should if this is intentional, prefix it with an underscore: `_pi`
+  |         ^^ If this is intentional, prefix it with an underscore: `_pi`
   |
   Note: `#[warn(unused_variables)]` on by default.
 
@@ -297,7 +301,7 @@ Hmmm... this comparison involving the minimum or maximum element for this type c
   |        ^^^^^^^^^^^^^^
   |
   Note: `#[deny(clippy::absurd_extreme_comparisons)]` on by default.
-  = help: because `i32::MAX` is the maximum value for this type, this comparison is always false
+  Hint: because `i32::MAX` is the maximum value for this type, this comparison is always false
   Would you like help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#absurd_extreme_comparisons.
 
