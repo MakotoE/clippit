@@ -50,53 +50,51 @@ pub fn replace_words(s: &str) -> String {
         }
     }
 
-    if result.contains("https://rust-lang.github.io/rust-clippy/") && result.contains("clippy::") {
-        // cargo clippy output
-        regex_replace(&mut result, r"(warning|error):(.*)", |caps: &Captures| {
-            if let Some(s) = caps[2].strip_suffix(" warnings emitted") {
-                "You have".to_string() + s + " issues in your code."
-            } else if caps[2].contains(".") {
-                "It looks like this could be improved because".to_string() + &caps[2] + "."
-            } else {
-                "Hmmm...".to_string() + &caps[2] + "."
-            }
-        });
+    regex_replace(
+        &mut result,
+        r"error: expected (.*)",
+        "The syntax is wrong because I expected $1.",
+    );
 
-        regex_replace(&mut result, r"= note:(.*)", |caps: &Captures| {
-            let mut result = "Note:".to_string() + &caps[1];
-            if !caps[1].ends_with("?") {
-                result.push('.')
-            }
-            result
-        });
+    regex_replace(&mut result, r"error\[\S+]:", "Oops!");
 
-        regex_replace(
-            &mut result,
-            r"= help: for further information visit (.*)",
-            "Would you like help with this? Visit\n  $1.",
-        );
+    regex_replace(&mut result, r"(warning|error):(.*)", |caps: &Captures| {
+        if let Some(s) = caps[2].strip_suffix(" warnings emitted") {
+            "You have".to_string() + s + " issues in your code."
+        } else if let Some(s) = caps[2].strip_suffix(" warning emitted") {
+            "You have".to_string() + s + " issue in your code."
+        } else if caps[2].contains(".") {
+            "It looks like this could be improved because".to_string() + &caps[2] + "."
+        } else {
+            "Hmmm...".to_string() + &caps[2] + "."
+        }
+    });
 
-        regex_replace(&mut result, r"= help:(.*)", |caps: &Captures| {
-            let mut result = "Hint:".to_string() + &caps[1];
-            if !caps[1].ends_with("?") {
-                result.push('.')
-            }
-            result
-        });
+    regex_replace(&mut result, r"= note:(.*)", |caps: &Captures| {
+        let mut result = "Note:".to_string() + &caps[1];
+        if !caps[1].ends_with("?") {
+            result.push('.')
+        }
+        result
+    });
 
-        result = result.replace("^ help: if", "^ If");
+    regex_replace(
+        &mut result,
+        r"= help: for further information visit (.*)",
+        "Would you like help with this? Visit\n  $1.",
+    );
 
-        result = result.replace("^ help:", "^ You should");
-    } else {
-        // Compilation error or no clippy output
-        regex_replace(
-            &mut result,
-            r"error: expected (.*)",
-            "The syntax is wrong because I expected $1.",
-        );
+    regex_replace(&mut result, r"= help:(.*)", |caps: &Captures| {
+        let mut result = "Hint:".to_string() + &caps[1];
+        if !caps[1].ends_with("?") {
+            result.push('.')
+        }
+        result
+    });
 
-        regex_replace(&mut result, r"error\[\S+]:", "Oops!");
-    }
+    result = result.replace("^ help: if", "^ If");
+
+    result = result.replace("^ help:", "^ You should");
 
     result
 }
@@ -339,6 +337,35 @@ Sorry, but you have too many errors in your code.
 Let's fix `rs-test`!
 
 To learn more, run the command again with --verbose.
+"#
+    )]
+    #[case(
+        r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
+warning: unused variable: `a`
+ --> src/main.rs:2:9
+  |
+2 |     let a = 0;
+  |         ^ help: if this is intentional, prefix it with an underscore: `_a`
+  |
+  = note: `#[warn(unused_variables)]` on by default
+
+warning: 1 warning emitted
+
+    Finished dev [unoptimized + debuginfo] target(s) in 0.02s
+"#,
+        // Expected
+        r#"I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...
+Hmmm... unused variable: `a`.
+ --> src/main.rs:2:9
+  |
+2 |     let a = 0;
+  |         ^ If this is intentional, prefix it with an underscore: `_a`
+  |
+  Note: `#[warn(unused_variables)]` on by default.
+
+You have 1 issue in your code.
+
+I finished compiling dev [unoptimized + debuginfo] target(s) in 0.02s.
 "#
     )]
     fn test_replace_words(#[case] input: &str, #[case] expected: &str) {
