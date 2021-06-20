@@ -1,4 +1,4 @@
-use anyhow::{Error, Result};
+use anyhow::Result;
 use clippy_output::ClippyOutput;
 use std::io::{stdin, Read};
 use terminal_size::terminal_size;
