@@ -2,6 +2,7 @@
 name = "clippy-output"
 version = "0.1.0"
 edition = "2018"
+documentation = "https://docs.rs/clippy-output/"
 
 [lib]
 
