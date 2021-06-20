@@ -13,6 +13,31 @@ pub fn replace_words(s: &str) -> String {
         s.trim_start().to_string()
     };
 
+    if let Cow::Owned(s) = Regex::new(r"error: aborting due to previous error")
+        .unwrap()
+        .replace(
+            &result,
+            "Sorry, but I cannot continue compiling with that error.",
+        )
+    {
+        result = s;
+    }
+
+    if let Cow::Owned(s) =
+        Regex::new(r"error: aborting due to \d* previous errors; \d* warnings emitted")
+            .unwrap()
+            .replace(&result, "Sorry, but you have too many errors in your code.")
+    {
+        result = s;
+    }
+
+    if let Cow::Owned(s) = Regex::new("error: could not compile (.*)")
+        .unwrap()
+        .replace_all(&result, "Let's fix $1!")
+    {
+        result = s;
+    }
+
     if result.contains("https://rust-lang.github.io/rust-clippy/") && result.contains("clippy::") {
         // cargo clippy output
         if let Cow::Owned(s) =
@@ -71,18 +96,6 @@ pub fn replace_words(s: &str) -> String {
         result = result.replace("^ help:", "^ You should");
     } else {
         // Compilation error or no clippy output
-        result = result.replace(
-            "error: aborting due to previous error",
-            "Sorry, but I cannot continue compiling with that error.",
-        );
-
-        if let Cow::Owned(s) = Regex::new("error: could not compile (.*)")
-            .unwrap()
-            .replace_all(&result, "Let's fix $1!")
-        {
-            result = s;
-        }
-
         if let Cow::Owned(s) = Regex::new("error: expected (.*)")
             .unwrap()
             .replace_all(&result, "The syntax is wrong because I expected $1.")
@@ -334,9 +347,9 @@ It looks like this could be improved because approximate value of `f{32, 64}::co
   Would you like help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant.
 
-You have aborting due to 3 previous errors; 3 issues in your code.
+Sorry, but you have too many errors in your code.
 
-Hmmm... could not compile `rs-test`.
+Let's fix `rs-test`!
 
 To learn more, run the command again with --verbose.
 "#
