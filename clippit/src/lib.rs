@@ -24,16 +24,23 @@ pub fn replace_words(s: &str) -> String {
                     } else if caps[2].contains(".") {
                         "It looks like this could be improved because".to_string() + &caps[2] + "."
                     } else {
-                        "Hmmm...".to_string() + &caps[2]
+                        "Hmmm...".to_string() + &caps[2] + "."
                     }
                 })
         {
             result = s;
         }
 
-        if let Cow::Owned(s) = Regex::new("= note: (.*)")
-            .unwrap()
-            .replace_all(&result, "Note: $1.")
+        if let Cow::Owned(s) =
+            Regex::new("= note:(.*)")
+                .unwrap()
+                .replace_all(&result, |caps: &Captures| {
+                    let mut result = "Note:".to_string() + &caps[1];
+                    if !caps[1].ends_with("?") {
+                        result.push('.')
+                    }
+                    result
+                })
         {
             result = s;
         }
@@ -45,7 +52,19 @@ pub fn replace_words(s: &str) -> String {
             result = s;
         }
 
-        result = result.replace("= help:", "Hint:");
+        if let Cow::Owned(s) =
+            Regex::new("= help:(.*)")
+                .unwrap()
+                .replace_all(&result, |caps: &Captures| {
+                    let mut result = "Hint:".to_string() + &caps[1];
+                    if !caps[1].ends_with("?") {
+                        result.push('.')
+                    }
+                    result
+                })
+        {
+            result = s;
+        }
 
         result = result.replace("^ help: if", "^ If");
 
@@ -169,7 +188,7 @@ warning: 2 warnings emitted
 "#,
         // Expected
         r#"I'm checking playground v0.0.1 (/playground)...
-Hmmm... unnecessary trailing semicolon
+Hmmm... unnecessary trailing semicolon.
  --> src/main.rs:2:27
   |
 2 |     println!("{}", ((0)));;
@@ -177,7 +196,7 @@ Hmmm... unnecessary trailing semicolon
   |
   Note: `#[warn(redundant_semicolons)]` on by default.
 
-Hmmm... consider removing unnecessary double parentheses
+Hmmm... consider removing unnecessary double parentheses.
  --> src/main.rs:2:20
   |
 2 |     println!("{}", ((0)));;
@@ -257,7 +276,7 @@ To learn more, run the command again with --verbose.
 "#,
     // Expected
         r#"I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...
-Hmmm... value assigned to `a` is never read
+Hmmm... value assigned to `a` is never read.
  --> src/main.rs:3:13
   |
 3 |     let mut a = 0;
@@ -266,7 +285,7 @@ Hmmm... value assigned to `a` is never read
   Note: `#[warn(unused_assignments)]` on by default.
   Hint: maybe it is overwritten before being read?
 
-Hmmm... value assigned to `b` is never read
+Hmmm... value assigned to `b` is never read.
  --> src/main.rs:6:5
   |
 6 |     b = a;
@@ -274,7 +293,7 @@ Hmmm... value assigned to `b` is never read
   |
   Hint: maybe it is overwritten before being read?
 
-Hmmm... unused variable: `pi`
+Hmmm... unused variable: `pi`.
  --> src/main.rs:7:9
   |
 7 |     let pi = 3.14;
@@ -282,7 +301,7 @@ Hmmm... unused variable: `pi`
   |
   Note: `#[warn(unused_variables)]` on by default.
 
-Hmmm... this looks like you are trying to swap `a` and `b`
+Hmmm... this looks like you are trying to swap `a` and `b`.
  --> src/main.rs:5:5
   |
 5 | /     a = b;
@@ -290,18 +309,18 @@ Hmmm... this looks like you are trying to swap `a` and `b`
   | |_________^ You should try: `std::mem::swap(&mut a, &mut b)`
   |
   Note: `#[deny(clippy::almost_swapped)]` on by default.
-  Note: or maybe you should use `std::mem::replace`?.
+  Note: or maybe you should use `std::mem::replace`?
   Would you like help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#almost_swapped.
 
-Hmmm... this comparison involving the minimum or maximum element for this type contains a case that is always true or always false
+Hmmm... this comparison involving the minimum or maximum element for this type contains a case that is always true or always false.
  --> src/main.rs:2:8
   |
 2 |     if 100 > i32::MAX {}
   |        ^^^^^^^^^^^^^^
   |
   Note: `#[deny(clippy::absurd_extreme_comparisons)]` on by default.
-  Hint: because `i32::MAX` is the maximum value for this type, this comparison is always false
+  Hint: because `i32::MAX` is the maximum value for this type, this comparison is always false.
   Would you like help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#absurd_extreme_comparisons.
 
@@ -317,7 +336,7 @@ It looks like this could be improved because approximate value of `f{32, 64}::co
 
 You have aborting due to 3 previous errors; 3 issues in your code.
 
-Hmmm... could not compile `rs-test`
+Hmmm... could not compile `rs-test`.
 
 To learn more, run the command again with --verbose.
 "#
