@@ -70,9 +70,9 @@ pub fn replace_words(s: &str) -> String {
         }
     });
 
-    regex_replace(&mut result, r"= note:(.*)", |caps: &Captures| {
-        let mut result = "Note:".to_string() + &caps[1];
-        if !caps[1].ends_with("?") {
+    regex_replace(&mut result, r"(= )?note:(.*)", |caps: &Captures| {
+        let mut result = "Note:".to_string() + &caps[2];
+        if !caps[2].ends_with("?") {
             result.push('.')
         }
         result
@@ -366,6 +366,51 @@ Hmmm... unused variable: `a`.
 You have 1 issue in your code.
 
 I finished compiling dev [unoptimized + debuginfo] target(s) in 0.02s.
+"#
+    )]
+    #[case(
+        r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
+error: calls to `std::mem::drop` with a value that implements `Copy`. Dropping a copy leaves the original intact
+ --> src/main.rs:3:5
+  |
+3 |     std::mem::drop(x);
+  |     ^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[deny(clippy::drop_copy)]` on by default
+note: argument has type i32
+ --> src/main.rs:3:20
+  |
+3 |     std::mem::drop(x);
+  |                    ^
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#drop_copy
+
+error: aborting due to previous error
+
+error: could not compile `rs-test`
+
+To learn more, run the command again with --verbose.
+"#,
+        r#"I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...
+It looks like this could be improved because calls to `std::mem::drop` with a value that implements `Copy`. Dropping a copy leaves the original intact.
+ --> src/main.rs:3:5
+  |
+3 |     std::mem::drop(x);
+  |     ^^^^^^^^^^^^^^^^^
+  |
+  Note: `#[deny(clippy::drop_copy)]` on by default.
+Note: argument has type i32.
+ --> src/main.rs:3:20
+  |
+3 |     std::mem::drop(x);
+  |                    ^
+  Would you like help with this? Visit
+  https://rust-lang.github.io/rust-clippy/master/index.html#drop_copy.
+
+Sorry, but I cannot continue compiling with that error.
+
+Let's fix `rs-test`!
+
+To learn more, run the command again with --verbose.
 "#
     )]
     fn test_replace_words(#[case] input: &str, #[case] expected: &str) {
