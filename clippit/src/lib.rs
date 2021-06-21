@@ -3,16 +3,8 @@ use std::borrow::Cow;
 use std::mem::swap;
 
 pub fn replace_words(s: &str) -> String {
-    // Replace "Checking"
-    let mut result = if let Some(after_checking) = s.strip_prefix("    Checking") {
-        let newline_index = after_checking.find("\n").unwrap_or(after_checking.len());
-        "I'm checking".to_string()
-            + &after_checking[..newline_index]
-            + "..."
-            + &after_checking[newline_index..]
-    } else {
-        s.to_string()
-    };
+    let mut result = s.to_string();
+    regex_replace_once(&mut result, "^    Checking(.*)", "I'm checking$1...");
 
     regex_replace_once(
         &mut result,
@@ -32,23 +24,11 @@ pub fn replace_words(s: &str) -> String {
         "Let's fix $1!",
     );
 
-    // "Finished..."
-    let last_line_index = match result.strip_suffix("\n").unwrap_or(&result).rfind("\n") {
-        Some(n) => n + 1,
-        None => result.len(),
-    };
-
-    const FINISHED: &str = "    Finished";
-    if result[last_line_index..].starts_with(FINISHED) {
-        result.replace_range(
-            last_line_index..last_line_index + FINISHED.len(),
-            "I finished compiling",
-        );
-
-        if result.ends_with("\n") {
-            result.insert(result.len() - 1, '.');
-        }
-    }
+    regex_replace_once(
+        &mut result,
+        "    Finished(.*)\n?$",
+        "I finished compiling$1.\n",
+    );
 
     regex_replace(
         &mut result,
