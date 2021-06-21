@@ -27,7 +27,7 @@
 |   |             ^^^^                                                           |
 |   |                                                                            |
 |   Note: `#[deny(clippy::approx_constant)]` on by default.                      |
-|   Would you like help with this? Visit                                         |
+|   Would you like some help with this? Visit                                    |
 |   https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant.   |
 |                                                                                |
 | Sorry, but I cannot continue compiling with that error.                        |

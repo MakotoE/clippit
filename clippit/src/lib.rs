@@ -16,19 +16,19 @@ pub fn replace_words(s: &str) -> String {
 
     regex_replace_once(
         &mut result,
-        r"error: aborting due to previous error.*",
+        r"(?m)^error: aborting due to previous error.*",
         "Sorry, but I cannot continue compiling with that error.",
     );
 
     regex_replace_once(
         &mut result,
-        r"error: aborting due to \d* previous errors; \d* warnings emitted",
+        r"(?m)^error: aborting due to \d* previous errors; \d* warnings emitted",
         "Sorry, but you have too many errors in your code.",
     );
 
     regex_replace_once(
         &mut result,
-        r"error: could not compile (.*)",
+        r"(?m)^error: could not compile (.*)",
         "Let's fix $1!",
     );
 
@@ -52,26 +52,36 @@ pub fn replace_words(s: &str) -> String {
 
     regex_replace(
         &mut result,
-        r"error: expected (.*)",
+        r"(?m)^error: expected (.*)",
         "The syntax is wrong because I expected $1.",
     );
 
-    regex_replace(&mut result, r"error\[\S+]:", "Oops!");
+    regex_replace(&mut result, r"(?m)^error\[\S+]:", "Oops!");
 
-    regex_replace(&mut result, r"(warning|error):(.*)", |caps: &Captures| {
-        if let Some(s) = caps[2].strip_suffix(" warnings emitted") {
-            "You have".to_string() + s + " issues in your code."
-        } else if let Some(s) = caps[2].strip_suffix(" warning emitted") {
-            "You have".to_string() + s + " issue in your code."
-        } else if caps[2].contains(".") {
-            "It looks like this could be improved because".to_string() + &caps[2] + "."
+    regex_replace(
+        &mut result,
+        r"(?m)^(warning|error):(.*)",
+        |caps: &Captures| {
+            if let Some(s) = caps[2].strip_suffix(" warnings emitted") {
+                "You have".to_string() + s + " issues in your code."
+            } else if let Some(s) = caps[2].strip_suffix(" warning emitted") {
+                "You have".to_string() + s + " issue in your code."
+            } else if caps[2].contains(".") {
+                "It looks like this could be improved because".to_string() + &caps[2] + "."
+            } else {
+                "Hmmm...".to_string() + &caps[2] + "."
+            }
+        },
+    );
+
+    regex_replace(&mut result, r"(?m)^(  = )?note:(.*)", |caps: &Captures| {
+        let mut result = if caps[0].starts_with("  ") {
+            "  Note:"
         } else {
-            "Hmmm...".to_string() + &caps[2] + "."
+            "Note:"
         }
-    });
-
-    regex_replace(&mut result, r"(= )?note:(.*)", |caps: &Captures| {
-        let mut result = "Note:".to_string() + &caps[2];
+        .to_string();
+        result.push_str(&caps[2]);
         if !caps[2].ends_with("?") {
             result.push('.')
         }
@@ -80,12 +90,12 @@ pub fn replace_words(s: &str) -> String {
 
     regex_replace(
         &mut result,
-        r"= help: for further information visit (.*)",
-        "Would you like help with this? Visit\n  $1.",
+        r"(?m)^  = help: for further information visit (.*)",
+        "  Would you like some help with this? Visit\n  $1.",
     );
 
-    regex_replace(&mut result, r"= help:(.*)", |caps: &Captures| {
-        let mut result = "Hint:".to_string() + &caps[1];
+    regex_replace(&mut result, r"(?m)^  = help:(.*)", |caps: &Captures| {
+        let mut result = "  Hint:".to_string() + &caps[1];
         if !caps[1].ends_with("?") {
             result.push('.')
         }
@@ -201,7 +211,7 @@ Hmmm... consider removing unnecessary double parentheses.
   |                    ^^^^^
   |
   Note: `#[warn(clippy::double_parens)]` on by default.
-  Would you like help with this? Visit
+  Would you like some help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#double_parens.
 
 You have 2 issues in your code.
@@ -308,7 +318,7 @@ Hmmm... this looks like you are trying to swap `a` and `b`.
   |
   Note: `#[deny(clippy::almost_swapped)]` on by default.
   Note: or maybe you should use `std::mem::replace`?
-  Would you like help with this? Visit
+  Would you like some help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#almost_swapped.
 
 Hmmm... this comparison involving the minimum or maximum element for this type contains a case that is always true or always false.
@@ -319,7 +329,7 @@ Hmmm... this comparison involving the minimum or maximum element for this type c
   |
   Note: `#[deny(clippy::absurd_extreme_comparisons)]` on by default.
   Hint: because `i32::MAX` is the maximum value for this type, this comparison is always false.
-  Would you like help with this? Visit
+  Would you like some help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#absurd_extreme_comparisons.
 
 It looks like this could be improved because approximate value of `f{32, 64}::consts::PI` found. Consider using it directly.
@@ -329,7 +339,7 @@ It looks like this could be improved because approximate value of `f{32, 64}::co
   |              ^^^^
   |
   Note: `#[deny(clippy::approx_constant)]` on by default.
-  Would you like help with this? Visit
+  Would you like some help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant.
 
 Sorry, but you have too many errors in your code.
@@ -390,6 +400,7 @@ error: could not compile `rs-test`
 
 To learn more, run the command again with --verbose.
 "#,
+        // Expected
         r#"I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...
 It looks like this could be improved because calls to `std::mem::drop` with a value that implements `Copy`. Dropping a copy leaves the original intact.
  --> src/main.rs:3:5
@@ -403,7 +414,7 @@ Note: argument has type i32.
   |
 3 |     std::mem::drop(x);
   |                    ^
-  Would you like help with this? Visit
+  Would you like some help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#drop_copy.
 
 Sorry, but I cannot continue compiling with that error.
@@ -411,6 +422,56 @@ Sorry, but I cannot continue compiling with that error.
 Let's fix `rs-test`!
 
 To learn more, run the command again with --verbose.
+"#
+    )]
+    // Check for false positives
+    #[case(
+        r#"warning: casting integer literal to `i32` is unnecessary
+ --> src/main.rs:2:57
+  |
+2 |     println!("error: aborting due to previous error{}", 0 as i32);
+  |                                                         ^^^^^^^^ help: try: `0_i32`
+  |
+  = note: `#[warn(clippy::unnecessary_cast)]` on by default
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_cast
+
+warning: this match could be replaced by its body itself
+ --> src/main.rs:3:27
+  |
+3 |     println!("= help:{}", match 0 {_ => 0});
+  |                           ^^^^^^^^^^^^^^^^ help: consider using the match body instead: `0`
+  |
+  = note: `#[warn(clippy::match_single_binding)]` on by default
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#match_single_binding
+
+warning: 2 warnings emitted
+
+    Finished dev [unoptimized + debuginfo] target(s) in 0.00s
+"#,
+        // Expected
+        r#"Hmmm... casting integer literal to `i32` is unnecessary.
+ --> src/main.rs:2:57
+  |
+2 |     println!("error: aborting due to previous error{}", 0 as i32);
+  |                                                         ^^^^^^^^ You should try: `0_i32`
+  |
+  Note: `#[warn(clippy::unnecessary_cast)]` on by default.
+  Would you like some help with this? Visit
+  https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_cast.
+
+Hmmm... this match could be replaced by its body itself.
+ --> src/main.rs:3:27
+  |
+3 |     println!("= help:{}", match 0 {_ => 0});
+  |                           ^^^^^^^^^^^^^^^^ You should consider using the match body instead: `0`
+  |
+  Note: `#[warn(clippy::match_single_binding)]` on by default.
+  Would you like some help with this? Visit
+  https://rust-lang.github.io/rust-clippy/master/index.html#match_single_binding.
+
+You have 2 issues in your code.
+
+I finished compiling dev [unoptimized + debuginfo] target(s) in 0.00s.
 "#
     )]
     fn test_replace_words(#[case] input: &str, #[case] expected: &str) {
