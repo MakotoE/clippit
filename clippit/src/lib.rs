@@ -82,10 +82,12 @@ pub fn replace_words(s: &str) -> String {
         result
     });
 
-    result = result.replace("^ help: if", "^ If");
-
-    result = result.replace("^ help:", "^ You should");
-
+    regex_replace(&mut result, r"(?m)^  \|( *)(\^+) help: if", "  |$1$2 If");
+    regex_replace(
+        &mut result,
+        r"(?m)^  \|( *| \|_+)(\^+) help:",
+        "  |$1$2 You should",
+    );
     result
 }
 
