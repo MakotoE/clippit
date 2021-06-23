@@ -2,6 +2,7 @@ use regex::{Captures, Regex, Replacer};
 use std::borrow::Cow;
 use std::mem::swap;
 
+/// Replaces words in given string to sound like Clippy.
 pub fn replace_words(s: &str) -> String {
     let mut result = s.to_string();
     regex_replace_once(&mut result, "^    Checking(.*)", "I'm checking$1...");

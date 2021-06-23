@@ -3,6 +3,7 @@ use clippy_output::ClippyOutput;
 use std::io::{stdin, Read};
 use terminal_size::terminal_size;
 
+/// Outputs ascii art of Clippy saying the input string.
 fn main() -> Result<()> {
     let stdin = stdin();
     let mut stdin = stdin.lock();
