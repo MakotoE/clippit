@@ -46,7 +46,7 @@ pub fn replace_words(s: &str) -> String {
                 "You have".to_string() + s + " issues in your code."
             } else if let Some(s) = caps[2].strip_suffix(" warning emitted") {
                 "You have".to_string() + s + " issue in your code."
-            } else if caps[2].contains(".") {
+            } else if caps[2].contains('.') {
                 "It looks like this could be improved because".to_string() + &caps[2] + "."
             } else {
                 "Hmmm...".to_string() + &caps[2] + "."
@@ -62,7 +62,7 @@ pub fn replace_words(s: &str) -> String {
         }
         .to_string();
         result.push_str(&caps[2]);
-        if !caps[2].ends_with("?") {
+        if !caps[2].ends_with('?') {
             result.push('.')
         }
         result
@@ -76,7 +76,7 @@ pub fn replace_words(s: &str) -> String {
 
     regex_replace(&mut result, r"(?m)^  = help:(.*)", |caps: &Captures| {
         let mut result = "  Hint:".to_string() + &caps[1];
-        if !caps[1].ends_with("?") {
+        if !caps[1].ends_with('?') {
             result.push('.')
         }
         result
