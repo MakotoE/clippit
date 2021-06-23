@@ -1,11 +1,13 @@
 [package]
 name = "clippit"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Makoto <makoto@emurasoft.com>"]
 edition = "2018"
 documentation = "https://docs.rs/clippit/"
 license = "MIT"
 description = "clippit makes cargo clippy sound like Office 2003's Clippit assistant (aka Clippy)."
+repository = "https://github.com/MakotoE/clippy-output"
+readme = "../README.md"
 
 [dependencies]
 anyhow = "1.0"
