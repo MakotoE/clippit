@@ -7,7 +7,6 @@ documentation = "https://docs.rs/clippy-output/"
 license = "MIT"
 description = "Inputs a string and outputs ascii art of Clippy saying the text."
 repository = "https://github.com/MakotoE/clippy-output"
-readme = "../README.md"
 
 [dependencies]
 anyhow = "1.0"

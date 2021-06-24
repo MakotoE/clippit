@@ -1,3 +1,8 @@
+| | |
+|---|---|
+|`clippit` | [![Latest version](https://img.shields.io/crates/v/clippit.svg)](https://crates.io/crates/clippit) |
+| `clippy-output` | [![Latest version](https://img.shields.io/crates/v/clippy-output.svg)](https://crates.io/crates/clippy-output) |
+
 `clippit` makes `cargo clippy` sound like Office 2003's Clippit assistant (aka "Clippy").
 
 ```
