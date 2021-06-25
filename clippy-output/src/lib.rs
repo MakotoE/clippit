@@ -25,7 +25,7 @@
 //! ```
 
 use std::mem::take;
-use textwrap::{fill, wrap};
+use textwrap::wrap;
 
 const CLIPPY_ART: &str = r#"/‾‾\
 |  |
@@ -78,24 +78,36 @@ impl ClippyOutput {
 
     /// Adds text to be processed.
     pub fn add_str(&mut self, s: &str) {
-        let wrapped = fill(s, (self.output_width - 4) as usize);
+        let lines = wrap(s, (self.output_width - 4) as usize);
 
-        for char in wrapped.chars() {
-            if char == '\n' {
+        for (i, line) in lines.iter().enumerate() {
+            for char in line.chars() {
+                if char == '\n' {
+                    ClippyOutput::add_string_to_buffer(
+                        &mut self.buf,
+                        &self.line,
+                        self.output_width - 4 - self.line_char_length,
+                    );
+                    self.line.clear();
+                    self.line_char_length = 0;
+                } else {
+                    self.line.push(char);
+                    self.line_char_length += 1;
+                }
+
+                if self.line_char_length == self.output_width - 4 {
+                    ClippyOutput::add_string_to_buffer(&mut self.buf, &self.line, 0);
+                    self.line.clear();
+                    self.line_char_length = 0;
+                }
+            }
+
+            if i < lines.len() - 1 {
                 ClippyOutput::add_string_to_buffer(
                     &mut self.buf,
                     &self.line,
                     self.output_width - 4 - self.line_char_length,
                 );
-                self.line.clear();
-                self.line_char_length = 0;
-            } else {
-                self.line.push(char);
-                self.line_char_length += 1;
-            }
-
-            if self.line_char_length == self.output_width - 4 {
-                ClippyOutput::add_string_to_buffer(&mut self.buf, &self.line, 0);
                 self.line.clear();
                 self.line_char_length = 0;
             }
@@ -237,6 +249,20 @@ mod tests {
             clippy.finish();
             let result: String = clippy.collect();
             assert_eq!(result, "| b  |\n\\____/\n");
+        }
+        {
+            // Word wrapping
+            let mut clippy = ClippyOutput::new(7);
+            clippy.add_str("a");
+            clippy.add_str("\n");
+            clippy.add_str("aaaa\n");
+            clippy.add_str("b");
+            clippy.finish();
+            let result: String = clippy.collect();
+            assert_eq!(
+                result,
+                CLIPPY_ART.to_string() + "/‾  ‾‾\\\n| a   |\n| aaa |\n| a   |\n| b   |\n\\_____/\n"
+            );
         }
     }
 }

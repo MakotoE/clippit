@@ -72,7 +72,7 @@ pub fn replace_words(s: &str) -> String {
     regex_replace(
         &mut result,
         r"(?m)^  = help: for further information visit (.*)",
-        "  Would you like some help with this? Visit $1.",
+        "  Would you like some help with this? Visit\n$1.",
     );
 
     regex_replace(&mut result, r"(?m)^  = help:(.*)", |caps: &Captures| {
