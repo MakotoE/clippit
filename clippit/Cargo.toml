@@ -1,6 +1,6 @@
 [package]
 name = "clippit"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Makoto <makoto@emurasoft.com>"]
 edition = "2018"
 documentation = "https://docs.rs/clippit/"
@@ -12,6 +12,6 @@ readme = "../README.md"
 [dependencies]
 anyhow = "1.0"
 terminal_size = "0.1"
-clippy-output = { version = "0.1", path = "../clippy-output" }
+clippy-output = { version = "0.2", path = "../clippy-output" }
 regex = "1.5"
 rstest = "0.10"

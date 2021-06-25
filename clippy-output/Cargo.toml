@@ -1,6 +1,6 @@
 [package]
 name = "clippy-output"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Makoto <makoto@emurasoft.com>"]
 edition = "2018"
 documentation = "https://docs.rs/clippy-output/"

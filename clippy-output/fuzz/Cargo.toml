@@ -21,7 +21,7 @@ path = ".."
 members = ["."]
 
 [[bin]]
-name = "clippy-output"
-path = "fuzz_targets/clippy-output.rs"
+name = "clippy_output"
+path = "fuzz_targets/clippy_output.rs"
 test = false
 doc = false
