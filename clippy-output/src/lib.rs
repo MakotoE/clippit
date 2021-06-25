@@ -25,6 +25,7 @@
 //! ```
 
 use std::mem::take;
+use textwrap::{fill, wrap};
 
 const CLIPPY_ART: &str = r#"/‾‾\
 |  |
@@ -77,7 +78,9 @@ impl ClippyOutput {
 
     /// Adds text to be processed.
     pub fn add_str(&mut self, s: &str) {
-        for char in s.chars() {
+        let wrapped = fill(s, (self.output_width - 4) as usize);
+
+        for char in wrapped.chars() {
             if char == '\n' {
                 ClippyOutput::add_string_to_buffer(
                     &mut self.buf,
@@ -100,12 +103,14 @@ impl ClippyOutput {
     }
 
     fn add_string_to_buffer(buf: &mut String, line: &str, space_count: u16) {
-        buf.push_str("| ");
-        buf.push_str(&line);
-        for _ in 0..space_count {
-            buf.push(' ');
+        if !line.is_empty() {
+            buf.push_str("| ");
+            buf.push_str(&line);
+            for _ in 0..space_count {
+                buf.push(' ');
+            }
+            buf.push_str(" |\n");
         }
-        buf.push_str(" |\n");
     }
 
     /// Appends the last line of the speech bubble.

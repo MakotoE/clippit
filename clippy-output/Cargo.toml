@@ -11,3 +11,4 @@ repository = "https://github.com/MakotoE/clippy-output"
 [dependencies]
 anyhow = "1.0"
 terminal_size = "0.1"
+textwrap = "0.14"
