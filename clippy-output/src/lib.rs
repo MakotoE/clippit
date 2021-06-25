@@ -78,7 +78,7 @@ impl ClippyOutput {
 
     /// Adds text to be processed.
     pub fn add_str(&mut self, s: &str) {
-        let lines = wrap(s, (self.output_width - 4) as usize);
+        let lines = wrap(s, usize::min((self.output_width - 4) as usize, 2000));
 
         for (i, line) in lines.iter().enumerate() {
             for char in line.chars() {
