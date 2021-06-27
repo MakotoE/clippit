@@ -77,7 +77,7 @@ pub fn replace_words(s: &str) -> String {
         }
         .to_string();
         result.push_str(&caps[2]);
-        if !caps[2].ends_with('?') {
+        if !caps[2].ends_with('.') && !caps[2].ends_with('?') {
             result.push('.')
         }
         result
@@ -103,6 +103,13 @@ pub fn replace_words(s: &str) -> String {
         r"(?m)^  \|( *| \|_+)(\^+) help:",
         "  |$1$2 You should",
     );
+
+    regex_replace(
+        &mut result,
+        r"thread 'main' panicked at ",
+        "#$@#$@#$!#$%!@#$ !INTERNAL ERROR! PLEASE REFER TO OWNERS MANUAL\n",
+    );
+
     result
 }
 
@@ -524,6 +531,16 @@ Psst... use `!` to invoke the macro.
   |
 2 |     println!();
   |            ^
+"#
+    )]
+    // 11
+    #[case(
+        r#"thread 'main' panicked at 'Usage of `--fix` requires `-Z unstable-options`', src/tools/clippy/src/main.rs:92:13
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+"#,
+        r#"#$@#$@#$!#$%!@#$ !INTERNAL ERROR! PLEASE REFER TO OWNERS MANUAL
+'Usage of `--fix` requires `-Z unstable-options`', src/tools/clippy/src/main.rs:92:13
+Note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace.
 "#
     )]
     fn test_replace_words(#[case] input: &str, #[case] expected: &str) {
