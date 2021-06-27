@@ -33,11 +33,25 @@ pub fn replace_words(s: &str) -> String {
 
     regex_replace(
         &mut result,
-        r"(?m)^error: expected (.*)",
-        "The syntax is wrong because I expected $1.",
+        r"(?m)^error: expected (.*), found (.*)",
+        "The syntax is wrong because I expected $1 but I found $2.",
     );
 
-    regex_replace(&mut result, r"(?m)^error\[\S+]:(.*)", "Oops!$1.");
+    regex_replace(
+        &mut result,
+        r"(?m)^error\[E0597\]: `(.*)` does not live long enough$",
+        "Oops! It looks like the variable with lifetime `$1` is dropped before it is used.",
+    );
+
+    regex_replace(
+        &mut result,
+        r"(?m)^error\[\S+\]: expected (.*), found (.*)",
+        "Oops! I expected $1, but I found $2.",
+    );
+
+    regex_replace(&mut result, r"(?m)^error\[\S+\]:(.*)", "Oops!$1.");
+
+    regex_replace(&mut result, r"(?m)^help: use (.*)", "Psst... use $1.");
 
     regex_replace(
         &mut result,
@@ -116,7 +130,9 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
+    // 1
     #[case("", "")]
+    // 2
     #[case(
         r#"    Checking playground v0.0.1 (/playground)
     Finished dev [unoptimized + debuginfo] target(s) in 1.40s
@@ -125,6 +141,7 @@ mod tests {
 I finished compiling dev [unoptimized + debuginfo] target(s) in 1.40s.
 "#
     )]
+    // 3
     #[case(
         r#"    Checking playground v0.0.1 (/playground)
 error: expected expression, found `.`
@@ -141,7 +158,7 @@ To learn more, run the command again with --verbose.
 "#,
         // Expected
         r#"I'm checking playground v0.0.1 (/playground)...
-The syntax is wrong because I expected expression, found `.`.
+The syntax is wrong because I expected expression but I found `.`.
  --> src/main.rs:2:5
   |
 2 |     .
@@ -154,6 +171,7 @@ Let's fix `playground`!
 To learn more, run the command again with --verbose.
 "#
     )]
+    // 4
     #[case(
         r#"    Checking playground v0.0.1 (/playground)
 warning: unnecessary trailing semicolon
@@ -202,6 +220,7 @@ You have 2 issues in your code.
 I finished compiling dev [unoptimized + debuginfo] target(s) in 0.54s.
 "#
     )]
+    // 5
     #[case(
         r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
 warning: value assigned to `a` is never read
@@ -332,6 +351,7 @@ Let's fix `rs-test`!
 To learn more, run the command again with --verbose.
 "#
     )]
+    // 6
     #[case(
         r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
 warning: unused variable: `a`
@@ -361,6 +381,7 @@ You have 1 issue in your code.
 I finished compiling dev [unoptimized + debuginfo] target(s) in 0.02s.
 "#
     )]
+    // 7
     #[case(
         r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
 error: calls to `std::mem::drop` with a value that implements `Copy`. Dropping a copy leaves the original intact
@@ -407,7 +428,7 @@ Let's fix `rs-test`!
 To learn more, run the command again with --verbose.
 "#
     )]
-    // Check for false positives
+    // 8 Check for false positives
     #[case(
         r#"warning: casting integer literal to `i32` is unnecessary
  --> src/main.rs:2:57
@@ -469,7 +490,7 @@ I finished compiling dev [unoptimized + debuginfo] target(s) in 0.00s.
 8 |     println!("{}", b);
   |                    - borrow later used here
 "#,
-        r#"Oops! `a` does not live long enough.
+        r#"Oops! It looks like the variable with lifetime `a` is dropped before it is used.
  --> src/main.rs:6:22
   |
 6 |         b = function(&a);
@@ -478,6 +499,31 @@ I finished compiling dev [unoptimized + debuginfo] target(s) in 0.00s.
   |     - `a` dropped here while still borrowed
 8 |     println!("{}", b);
   |                    - borrow later used here
+"#
+    )]
+    // 10
+    #[case(
+        r#"error[E0423]: expected function, found macro `println`
+ --> src/main.rs:2:5
+  |
+2 |     println();
+  |     ^^^^^^^ not a function
+  |
+help: use `!` to invoke the macro
+  |
+2 |     println!();
+  |            ^
+"#,
+        r#"Oops! I expected function, but I found macro `println`.
+ --> src/main.rs:2:5
+  |
+2 |     println();
+  |     ^^^^^^^ not a function
+  |
+Psst... use `!` to invoke the macro.
+  |
+2 |     println!();
+  |            ^
 "#
     )]
     fn test_replace_words(#[case] input: &str, #[case] expected: &str) {
