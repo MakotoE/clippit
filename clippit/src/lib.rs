@@ -116,9 +116,7 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
-    // 1
     #[case("", "")]
-    // 2
     #[case(
         r#"    Checking playground v0.0.1 (/playground)
     Finished dev [unoptimized + debuginfo] target(s) in 1.40s
@@ -127,7 +125,6 @@ mod tests {
 I finished compiling dev [unoptimized + debuginfo] target(s) in 1.40s.
 "#
     )]
-    // 3
     #[case(
         r#"    Checking playground v0.0.1 (/playground)
 error: expected expression, found `.`
@@ -157,7 +154,6 @@ Let's fix `playground`!
 To learn more, run the command again with --verbose.
 "#
     )]
-    // 4
     #[case(
         r#"    Checking playground v0.0.1 (/playground)
 warning: unnecessary trailing semicolon
@@ -199,14 +195,13 @@ Hmmm... consider removing unnecessary double parentheses.
   |
   Note: `#[warn(clippy::double_parens)]` on by default.
   Would you like some help with this? Visit
-https://rust-lang.github.io/rust-clippy/master/index.html#double_parens.
+  https://rust-lang.github.io/rust-clippy/master/index.html#double_parens.
 
 You have 2 issues in your code.
 
 I finished compiling dev [unoptimized + debuginfo] target(s) in 0.54s.
 "#
     )]
-    // 5
     #[case(
         r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
 warning: value assigned to `a` is never read
@@ -307,7 +302,7 @@ Hmmm... this looks like you are trying to swap `a` and `b`.
   Note: `#[deny(clippy::almost_swapped)]` on by default.
   Note: or maybe you should use `std::mem::replace`?
   Would you like some help with this? Visit
-https://rust-lang.github.io/rust-clippy/master/index.html#almost_swapped.
+  https://rust-lang.github.io/rust-clippy/master/index.html#almost_swapped.
 
 Hmmm... this comparison involving the minimum or maximum element for this type contains a case that is always true or always false.
  --> src/main.rs:2:8
@@ -318,7 +313,7 @@ Hmmm... this comparison involving the minimum or maximum element for this type c
   Note: `#[deny(clippy::absurd_extreme_comparisons)]` on by default.
   Hint: because `i32::MAX` is the maximum value for this type, this comparison is always false.
   Would you like some help with this? Visit
-https://rust-lang.github.io/rust-clippy/master/index.html#absurd_extreme_comparisons.
+  https://rust-lang.github.io/rust-clippy/master/index.html#absurd_extreme_comparisons.
 
 It looks like this could be improved because approximate value of `f{32, 64}::consts::PI` found. Consider using it directly.
  --> src/main.rs:7:14
@@ -328,7 +323,7 @@ It looks like this could be improved because approximate value of `f{32, 64}::co
   |
   Note: `#[deny(clippy::approx_constant)]` on by default.
   Would you like some help with this? Visit
-https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant.
+  https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant.
 
 Sorry, but you have too many errors in your code.
 
@@ -337,7 +332,6 @@ Let's fix `rs-test`!
 To learn more, run the command again with --verbose.
 "#
     )]
-    // 6
     #[case(
         r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
 warning: unused variable: `a`
@@ -367,7 +361,6 @@ You have 1 issue in your code.
 I finished compiling dev [unoptimized + debuginfo] target(s) in 0.02s.
 "#
     )]
-    // 7
     #[case(
         r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
 error: calls to `std::mem::drop` with a value that implements `Copy`. Dropping a copy leaves the original intact
@@ -405,7 +398,7 @@ Note: argument has type i32.
 3 |     std::mem::drop(x);
   |                    ^
   Would you like some help with this? Visit
-https://rust-lang.github.io/rust-clippy/master/index.html#drop_copy.
+  https://rust-lang.github.io/rust-clippy/master/index.html#drop_copy.
 
 Sorry, but I cannot continue compiling with that error.
 
@@ -414,7 +407,7 @@ Let's fix `rs-test`!
 To learn more, run the command again with --verbose.
 "#
     )]
-    // 8 Check for false positives
+    // Check for false positives
     #[case(
         r#"warning: casting integer literal to `i32` is unnecessary
  --> src/main.rs:2:57
@@ -447,7 +440,7 @@ warning: 2 warnings emitted
   |
   Note: `#[warn(clippy::unnecessary_cast)]` on by default.
   Would you like some help with this? Visit
-https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_cast.
+  https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_cast.
 
 Hmmm... this match could be replaced by its body itself.
  --> src/main.rs:3:27
@@ -457,7 +450,7 @@ Hmmm... this match could be replaced by its body itself.
   |
   Note: `#[warn(clippy::match_single_binding)]` on by default.
   Would you like some help with this? Visit
-https://rust-lang.github.io/rust-clippy/master/index.html#match_single_binding.
+  https://rust-lang.github.io/rust-clippy/master/index.html#match_single_binding.
 
 You have 2 issues in your code.
 
