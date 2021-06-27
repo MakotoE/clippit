@@ -37,7 +37,7 @@ pub fn replace_words(s: &str) -> String {
         "The syntax is wrong because I expected $1.",
     );
 
-    regex_replace(&mut result, r"(?m)^error\[\S+]:", "Oops!");
+    regex_replace(&mut result, r"(?m)^error\[\S+]:(.*)", "Oops!$1.");
 
     regex_replace(
         &mut result,
@@ -462,6 +462,29 @@ https://rust-lang.github.io/rust-clippy/master/index.html#match_single_binding.
 You have 2 issues in your code.
 
 I finished compiling dev [unoptimized + debuginfo] target(s) in 0.00s.
+"#
+    )]
+    // 9
+    #[case(
+        r#"error[E0597]: `a` does not live long enough
+ --> src/main.rs:6:22
+  |
+6 |         b = function(&a);
+  |                      ^^ borrowed value does not live long enough
+7 |     }
+  |     - `a` dropped here while still borrowed
+8 |     println!("{}", b);
+  |                    - borrow later used here
+"#,
+        r#"Oops! `a` does not live long enough.
+ --> src/main.rs:6:22
+  |
+6 |         b = function(&a);
+  |                      ^^ borrowed value does not live long enough
+7 |     }
+  |     - `a` dropped here while still borrowed
+8 |     println!("{}", b);
+  |                    - borrow later used here
 "#
     )]
     fn test_replace_words(#[case] input: &str, #[case] expected: &str) {
