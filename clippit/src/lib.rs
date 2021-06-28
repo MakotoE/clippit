@@ -97,7 +97,10 @@ pub fn replace_words(s: &str) -> String {
         result
     });
 
+    // "^^ help: if this is intentional..."
     regex_replace(&mut result, r"(?m)^  \|( *)(\^+) help: if", "  |$1$2 If");
+
+    // "^ help: remove this semicolon"
     regex_replace(
         &mut result,
         r"(?m)^  \|( *| \|_+)(\^+) help:",
