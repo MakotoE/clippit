@@ -117,7 +117,7 @@ impl ClippyOutput {
     fn add_string_to_buffer(buf: &mut String, line: &str, space_count: u16) {
         if !line.is_empty() {
             buf.push_str("| ");
-            buf.push_str(&line);
+            buf.push_str(line);
             for _ in 0..space_count {
                 buf.push(' ');
             }

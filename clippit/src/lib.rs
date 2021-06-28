@@ -120,7 +120,7 @@ fn regex_replace<R>(str: &mut String, regex: &str, replacement: R)
 where
     R: Replacer,
 {
-    if let Cow::Owned(mut s) = Regex::new(regex).unwrap().replace_all(&str, replacement) {
+    if let Cow::Owned(mut s) = Regex::new(regex).unwrap().replace_all(str, replacement) {
         swap(str, &mut s);
     }
 }
@@ -129,7 +129,7 @@ fn regex_replace_once<R>(str: &mut String, regex: &str, replacement: R)
 where
     R: Replacer,
 {
-    if let Cow::Owned(mut s) = Regex::new(regex).unwrap().replace(&str, replacement) {
+    if let Cow::Owned(mut s) = Regex::new(regex).unwrap().replace(str, replacement) {
         swap(str, &mut s);
     }
 }
