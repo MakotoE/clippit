@@ -11,4 +11,4 @@ repository = "https://github.com/MakotoE/clippy-output"
 [dependencies]
 anyhow = "1.0"
 terminal_size = "0.1"
-textwrap = { version = "0.14", git = "https://github.com/MakotoE/textwrap", branch = "upstream-with-wrap_optimal_fit" }
+textwrap = "0.14"
