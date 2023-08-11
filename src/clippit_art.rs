@@ -1,29 +1,3 @@
-//! ```
-//! use clippy_output::ClippyOutput;
-//!
-//! let mut clippy = ClippyOutput::new(50);
-//! clippy
-//!     .add_str("It looks like you're creating a project in\nRust. Would you like some help with that?");
-//! clippy.finish();
-//!
-//! let output: String = clippy.collect();
-//! println!("{}", output);
-//! ```
-//! ```none
-//! /‾‾\
-//! |  |
-//! @  @
-//! || |/
-//! || ||
-//! |\_/|
-//! \___/
-//!   /\
-//! /‾  ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
-//! | It looks like you're creating a project in     |
-//! | Rust. Would you like some help with that?      |
-//! \________________________________________________/
-//! ```
-
 use std::mem::take;
 use textwrap::wrap;
 

@@ -1,8 +1,10 @@
 use anyhow::Result;
 use clippit::replace_words;
-use clippy_output::ClippyOutput;
+use clippit::clippit_art::ClippyOutput;
 use std::io::{stdin, Read};
 use terminal_size::terminal_size;
+
+pub mod lib;
 
 fn main() -> Result<()> {
     let mut line = String::new();

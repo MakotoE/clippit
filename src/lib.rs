@@ -1,6 +1,10 @@
+#![doc = include_str!("../README.md")]
+
 use regex::{Captures, Regex, Replacer};
 use std::borrow::Cow;
 use std::mem::swap;
+
+pub mod clippit_art;
 
 /// Replaces words in given string to sound like Clippy.
 pub fn replace_words(s: &str) -> String {

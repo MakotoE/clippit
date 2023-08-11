@@ -3,12 +3,12 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/clippy-output/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/clippit/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/clippy-output/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/clippit/target" />
       <excludeFolder url="file://$MODULE_DIR$/clippy-output/fuzz/target" />
-      <excludeFolder url="file://$MODULE_DIR$/clippit/fuzz/target" />
+      <excludeFolder url="file://$MODULE_DIR$/fuzz/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

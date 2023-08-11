@@ -1,6 +1,6 @@
 
 [package]
-name = "clippy-output-fuzz"
+name = "clippit-fuzz"
 version = "0.0.0"
 authors = ["Automatically generated"]
 publish = false
@@ -11,17 +11,16 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-arbitrary = { version = "1.0", features = ["derive"] }
 
-[dependencies.clippy-output]
-path = ".."
+[dependencies.clippit]
+path = "../clippit"
 
 # Prevent this from interfering with workspaces
 [workspace]
-members = ["."]
+members = [""]
 
 [[bin]]
-name = "clippy_output"
-path = "fuzz_targets/clippy_output.rs"
+name = "replace_words"
+path = "fuzz_targets/replace_words.rs"
 test = false
 doc = false

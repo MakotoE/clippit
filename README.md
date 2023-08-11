@@ -1,11 +1,8 @@
-| | |
-|---|---|
-|`clippit` | [![Latest version](https://img.shields.io/crates/v/clippit.svg)](https://crates.io/crates/clippit) |
-| `clippy-output` | [![Latest version](https://img.shields.io/crates/v/clippy-output.svg)](https://crates.io/crates/clippy-output) |
+[![Latest version](https://img.shields.io/crates/v/clippit.svg)](https://crates.io/crates/clippit)
 
 `clippit` makes `cargo clippy` sound like Office 2003's Clippit assistant (aka "Clippy").
 
-```
+```none
 /‾‾\
 |  |
 @  @
@@ -48,8 +45,6 @@ Install with `cargo install clippit`, then in a Rust directory, run
 ```
 cargo clippy 2>&1 | clippit
 ```
-
-The `clippy-output` directory contains a library and command for adding just the Clippy ascii art to text, without replacing any words.
 
 Only tested with `rustc 1.53.0` and `clippy 0.1.53`.
 
