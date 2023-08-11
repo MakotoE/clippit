@@ -9,9 +9,10 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
+      - run: rustup update
       - run: rustup component add clippy
       - run: rustup component add rustfmt
       - run: RUST_BACKTRACE=1 cargo test --all-features -- --nocapture
