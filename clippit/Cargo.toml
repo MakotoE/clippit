@@ -2,7 +2,7 @@
 name = "clippit"
 version = "0.2.0"
 authors = ["Makoto <makoto@emurasoft.com>"]
-edition = "2018"
+edition = "2021"
 documentation = "https://docs.rs/clippit/"
 license = "MIT"
 description = "clippit makes cargo clippy sound like Office 2003's Clippit assistant (aka Clippy)."
@@ -11,7 +11,7 @@ readme = "../README.md"
 
 [dependencies]
 anyhow = "1.0"
-terminal_size = "0.1"
+terminal_size = "0.2"
 clippy-output = { version = "0.2", path = "../clippy-output" }
 regex = "1.5"
-rstest = "0.10"
+rstest = "0.18"
