@@ -12,7 +12,7 @@ pub mod clippit_art;
 pub fn output<Writer>(input: &str, output: &mut Writer) -> std::io::Result<()>
     where Writer: Write,
 {
-    let width = u16::min(terminal_size().map(|a| a.0 .0).unwrap_or(100), 120);
+    let width = u16::min(terminal_size().map(|a| a.0.0).unwrap_or(100), 120);
     let mut clippy = ClippyArt::new(width);
 
     clippy.add_str(&replace_words(&input));
@@ -43,7 +43,7 @@ pub fn replace_words(s: &str) -> String {
 
     regex_replace_once(
         &mut result,
-        r"(?m)^error: could not compile (.*)",
+        r"(?m)^error: could not compile (.*) due to.*",
         "Let's fix $1!",
     );
 
@@ -97,7 +97,7 @@ pub fn replace_words(s: &str) -> String {
         } else {
             "Note:"
         }
-        .to_string();
+            .to_string();
         result.push_str(&caps[2]);
         if !caps[2].ends_with('.') && !caps[2].ends_with('?') {
             result.push('.')
@@ -139,8 +139,8 @@ pub fn replace_words(s: &str) -> String {
 }
 
 fn regex_replace<R>(str: &mut String, regex: &str, replacement: R)
-where
-    R: Replacer,
+    where
+        R: Replacer,
 {
     if let Cow::Owned(mut s) = Regex::new(regex).unwrap().replace_all(str, replacement) {
         swap(str, &mut s);
@@ -148,8 +148,8 @@ where
 }
 
 fn regex_replace_once<R>(str: &mut String, regex: &str, replacement: R)
-where
-    R: Replacer,
+    where
+        R: Replacer,
 {
     if let Cow::Owned(mut s) = Regex::new(regex).unwrap().replace(str, replacement) {
         swap(str, &mut s);
@@ -166,46 +166,43 @@ mod tests {
     #[case("", "")]
     // 2
     #[case(
-        r#"    Checking playground v0.0.1 (/playground)
+    r#"    Checking playground v0.0.1 (/playground)
     Finished dev [unoptimized + debuginfo] target(s) in 1.40s
 "#,
-        r#"I'm checking playground v0.0.1 (/playground)...
+    r#"I'm checking playground v0.0.1 (/playground)...
 I finished compiling dev [unoptimized + debuginfo] target(s) in 1.40s.
 "#
     )]
     // 3
+    /*
+    fn main() {
+        .
+    }
+    */
     #[case(
-        r#"    Checking playground v0.0.1 (/playground)
+    r#"    Checking playground v0.0.1 (/playground)
 error: expected expression, found `.`
  --> src/main.rs:2:5
   |
 2 |     .
   |     ^ expected expression
 
-error: aborting due to previous error; 1 warning emitted
-
-error: could not compile `playground`
-
-To learn more, run the command again with --verbose.
+error: could not compile `playground` (bin "playground") due to previous error
 "#,
-        // Expected
-        r#"I'm checking playground v0.0.1 (/playground)...
+    // Expected
+    r#"I'm checking playground v0.0.1 (/playground)...
 The syntax is wrong because I expected expression but I found `.`.
  --> src/main.rs:2:5
   |
 2 |     .
   |     ^ expected expression
 
-Sorry, but I cannot continue compiling with that error.
-
-Let's fix `playground`!
-
-To learn more, run the command again with --verbose.
+Let's fix `playground` (bin "playground")!
 "#
     )]
     // 4
     #[case(
-        r#"    Checking playground v0.0.1 (/playground)
+    r#"    Checking playground v0.0.1 (/playground)
 warning: unnecessary trailing semicolon
  --> src/main.rs:2:27
   |
@@ -227,8 +224,8 @@ warning: 2 warnings emitted
 
     Finished dev [unoptimized + debuginfo] target(s) in 0.54s
 "#,
-        // Expected
-        r#"I'm checking playground v0.0.1 (/playground)...
+    // Expected
+    r#"I'm checking playground v0.0.1 (/playground)...
 Hmmm... unnecessary trailing semicolon.
  --> src/main.rs:2:27
   |
@@ -254,7 +251,7 @@ I finished compiling dev [unoptimized + debuginfo] target(s) in 0.54s.
     )]
     // 5
     #[case(
-        r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
+    r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
 warning: value assigned to `a` is never read
  --> src/main.rs:3:13
   |
@@ -317,7 +314,7 @@ error: could not compile `rs-test`
 To learn more, run the command again with --verbose.
 "#,
     // Expected
-        r#"I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...
+    r#"I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...
 Hmmm... value assigned to `a` is never read.
  --> src/main.rs:3:13
   |
@@ -385,7 +382,7 @@ To learn more, run the command again with --verbose.
     )]
     // 6
     #[case(
-        r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
+    r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
 warning: unused variable: `a`
  --> src/main.rs:2:9
   |
@@ -398,8 +395,8 @@ warning: 1 warning emitted
 
     Finished dev [unoptimized + debuginfo] target(s) in 0.02s
 "#,
-        // Expected
-        r#"I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...
+    // Expected
+    r#"I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...
 Hmmm... unused variable: `a`.
  --> src/main.rs:2:9
   |
@@ -414,55 +411,73 @@ I finished compiling dev [unoptimized + debuginfo] target(s) in 0.02s.
 "#
     )]
     // 7
+    /*
+    #[deny(clippy::drop_copy)]
+    fn main() {
+        let x = 1;
+        std::mem::drop(x);
+    }
+     */
     #[case(
-        r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
-error: calls to `std::mem::drop` with a value that implements `Copy`. Dropping a copy leaves the original intact
- --> src/main.rs:3:5
+    r#"    Checking playground v0.0.1 (/playground)
+warning: lint `clippy::drop_copy` has been renamed to `dropping_copy_types`
+ --> src/main.rs:1:8
   |
-3 |     std::mem::drop(x);
-  |     ^^^^^^^^^^^^^^^^^
+1 | #[deny(clippy::drop_copy)]
+  |        ^^^^^^^^^^^^^^^^^ help: use the new name: `dropping_copy_types`
   |
-  = note: `#[deny(clippy::drop_copy)]` on by default
-note: argument has type i32
- --> src/main.rs:3:20
+  = note: `#[warn(renamed_and_removed_lints)]` on by default
+
+error: calls to `std::mem::drop` with a value that implements `Copy` does nothing
+ --> src/main.rs:4:5
   |
-3 |     std::mem::drop(x);
-  |                    ^
-  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#drop_copy
+4 |     std::mem::drop(x);
+  |     ^^^^^^^^^^^^^^^-^
+  |                    |
+  |                    argument has type `i32`
+  |
+  = note: use `let _ = ...` to ignore the expression or result
+note: the lint level is defined here
+ --> src/main.rs:1:8
+  |
+1 | #[deny(clippy::drop_copy)]
+  |        ^^^^^^^^^^^^^^^^^
 
-error: aborting due to previous error
-
-error: could not compile `rs-test`
-
-To learn more, run the command again with --verbose.
+warning: `playground` (bin "playground") generated 1 warning
+error: could not compile `playground` (bin "playground") due to previous error; 1 warning emitted
 "#,
-        // Expected
-        r#"I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...
-It looks like this could be improved because calls to `std::mem::drop` with a value that implements `Copy`. Dropping a copy leaves the original intact.
- --> src/main.rs:3:5
+    // Expected
+    r#"I'm checking playground v0.0.1 (/playground)...
+Hmmm... lint `clippy::drop_copy` has been renamed to `dropping_copy_types`.
+ --> src/main.rs:1:8
   |
-3 |     std::mem::drop(x);
-  |     ^^^^^^^^^^^^^^^^^
+1 | #[deny(clippy::drop_copy)]
+  |        ^^^^^^^^^^^^^^^^^ You should use the new name: `dropping_copy_types`
   |
-  Note: `#[deny(clippy::drop_copy)]` on by default.
-Note: argument has type i32.
- --> src/main.rs:3:20
+  Note: `#[warn(renamed_and_removed_lints)]` on by default.
+
+Hmmm... calls to `std::mem::drop` with a value that implements `Copy` does nothing.
+ --> src/main.rs:4:5
   |
-3 |     std::mem::drop(x);
-  |                    ^
-  Would you like some help with this? Visit
-  https://rust-lang.github.io/rust-clippy/master/index.html#drop_copy.
+4 |     std::mem::drop(x);
+  |     ^^^^^^^^^^^^^^^-^
+  |                    |
+  |                    argument has type `i32`
+  |
+  Note: use `let _ = ...` to ignore the expression or result.
+Note: the lint level is defined here.
+ --> src/main.rs:1:8
+  |
+1 | #[deny(clippy::drop_copy)]
+  |        ^^^^^^^^^^^^^^^^^
 
-Sorry, but I cannot continue compiling with that error.
-
-Let's fix `rs-test`!
-
-To learn more, run the command again with --verbose.
+Hmmm... `playground` (bin "playground") generated 1 warning.
+Let's fix `playground` (bin "playground")!
 "#
     )]
     // 8 Check for false positives
     #[case(
-        r#"warning: casting integer literal to `i32` is unnecessary
+    r#"warning: casting integer literal to `i32` is unnecessary
  --> src/main.rs:2:57
   |
 2 |     println!("error: aborting due to previous error{}", 0 as i32);
@@ -484,8 +499,8 @@ warning: 2 warnings emitted
 
     Finished dev [unoptimized + debuginfo] target(s) in 0.00s
 "#,
-        // Expected
-        r#"Hmmm... casting integer literal to `i32` is unnecessary.
+    // Expected
+    r#"Hmmm... casting integer literal to `i32` is unnecessary.
  --> src/main.rs:2:57
   |
 2 |     println!("error: aborting due to previous error{}", 0 as i32);
@@ -512,7 +527,7 @@ I finished compiling dev [unoptimized + debuginfo] target(s) in 0.00s.
     )]
     // 9
     #[case(
-        r#"error[E0597]: `a` does not live long enough
+    r#"error[E0597]: `a` does not live long enough
  --> src/main.rs:6:22
   |
 6 |         b = function(&a);
@@ -522,7 +537,7 @@ I finished compiling dev [unoptimized + debuginfo] target(s) in 0.00s.
 8 |     println!("{}", b);
   |                    - borrow later used here
 "#,
-        r#"Oops! It looks like the variable with lifetime `a` is dropped before it is used.
+    r#"Oops! It looks like the variable with lifetime `a` is dropped before it is used.
  --> src/main.rs:6:22
   |
 6 |         b = function(&a);
@@ -535,7 +550,7 @@ I finished compiling dev [unoptimized + debuginfo] target(s) in 0.00s.
     )]
     // 10
     #[case(
-        r#"error[E0423]: expected function, found macro `println`
+    r#"error[E0423]: expected function, found macro `println`
  --> src/main.rs:2:5
   |
 2 |     println();
@@ -546,7 +561,7 @@ help: use `!` to invoke the macro
 2 |     println!();
   |            ^
 "#,
-        r#"Oops! I expected function, but I found macro `println`.
+    r#"Oops! I expected function, but I found macro `println`.
  --> src/main.rs:2:5
   |
 2 |     println();
@@ -560,10 +575,10 @@ Psst... use `!` to invoke the macro.
     )]
     // 11
     #[case(
-        r#"thread 'main' panicked at 'Usage of `--fix` requires `-Z unstable-options`', src/tools/clippy/src/main.rs:92:13
+    r#"thread 'main' panicked at 'Usage of `--fix` requires `-Z unstable-options`', src/tools/clippy/src/main.rs:92:13
 note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 "#,
-        r#"#$@#$@#$!#$%!@#$ !INTERNAL ERROR! PLEASE REFER TO OWNERS MANUAL
+    r#"#$@#$@#$!#$%!@#$ !INTERNAL ERROR! PLEASE REFER TO OWNERS MANUAL
 'Usage of `--fix` requires `-Z unstable-options`', src/tools/clippy/src/main.rs:92:13
 Note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace.
 "#

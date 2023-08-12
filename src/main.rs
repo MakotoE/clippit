@@ -44,7 +44,7 @@ mod tests {
         std::env::set_current_dir("problematic-code").unwrap();
 
         let mut output: Vec<u8> = Vec::new();
-        let status_code = run(Vec::new(), &mut output).unwrap();
+        let status_code = run(vec!["-v".to_string()], &mut output).unwrap();
 
         let output_str = std::str::from_utf8(&output).unwrap();
         println!("{output_str}");
