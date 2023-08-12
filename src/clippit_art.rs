@@ -14,9 +14,9 @@ const CLIPPY_ART: &str = r#"/‾‾\
 /// Inputs a string and outputs ascii art of Clippy saying the text.
 ///
 /// Call `add_str()` to input strings and call `finish()` at the end after all text as been added.
-/// `ClippyOutput` implements `Iterator` to return the output string.
+/// `ClippyArt` implements `Iterator` to return the output string.
 #[derive(Default, Clone, PartialOrd, PartialEq)]
-pub struct ClippyOutput {
+pub struct ClippyArt {
     buf: String,
 
     // output_width >= 5
@@ -31,7 +31,7 @@ pub struct ClippyOutput {
     line_char_length: u16,
 }
 
-impl ClippyOutput {
+impl ClippyArt {
     pub fn new(mut output_width: u16) -> Self {
         if output_width < 5 {
             output_width = 5;
@@ -57,7 +57,7 @@ impl ClippyOutput {
         for (i, line) in lines.iter().enumerate() {
             for char in line.chars() {
                 if char == '\n' {
-                    ClippyOutput::add_string_to_buffer(
+                    ClippyArt::add_string_to_buffer(
                         &mut self.buf,
                         &self.line,
                         self.output_width - 4 - self.line_char_length,
@@ -70,14 +70,14 @@ impl ClippyOutput {
                 }
 
                 if self.line_char_length == self.output_width - 4 {
-                    ClippyOutput::add_string_to_buffer(&mut self.buf, &self.line, 0);
+                    ClippyArt::add_string_to_buffer(&mut self.buf, &self.line, 0);
                     self.line.clear();
                     self.line_char_length = 0;
                 }
             }
 
             if i < lines.len() - 1 {
-                ClippyOutput::add_string_to_buffer(
+                ClippyArt::add_string_to_buffer(
                     &mut self.buf,
                     &self.line,
                     self.output_width - 4 - self.line_char_length,
@@ -104,7 +104,7 @@ impl ClippyOutput {
     /// `add_str()` or `finish()` should not be called after `finish()` was called.
     pub fn finish(&mut self) {
         if !self.line.is_empty() {
-            ClippyOutput::add_string_to_buffer(
+            ClippyArt::add_string_to_buffer(
                 &mut self.buf,
                 &self.line,
                 self.output_width - 4 - self.line.chars().count() as u16,
@@ -121,7 +121,7 @@ impl ClippyOutput {
     }
 }
 
-impl Iterator for ClippyOutput {
+impl Iterator for ClippyArt {
     type Item = String;
 
     /// Returns `Some` if there is a string remaining in the buffer. Returns `None` if the buffer is
@@ -144,7 +144,7 @@ mod tests {
     fn clippy_output() {
         {
             // Minimum output width
-            let mut clippy = ClippyOutput::new(0);
+            let mut clippy = ClippyArt::new(0);
             let result: String = clippy.by_ref().collect();
             assert_eq!(result, CLIPPY_ART.to_string() + "/‾  \\\n");
 
@@ -154,14 +154,14 @@ mod tests {
         }
         {
             // Add empty string
-            let mut clippy = ClippyOutput::new(0);
+            let mut clippy = ClippyArt::new(0);
             clippy.add_str("");
             clippy.finish();
             let result: String = clippy.collect();
             assert_eq!(result, CLIPPY_ART.to_string() + "/‾  \\\n\\___/\n");
         }
         {
-            let mut clippy = ClippyOutput::new(0);
+            let mut clippy = ClippyArt::new(0);
             clippy.add_str("a");
             let result: String = clippy.by_ref().collect();
             assert_eq!(result, CLIPPY_ART.to_string() + "/‾  \\\n| a |\n");
@@ -178,7 +178,7 @@ mod tests {
         }
         {
             // Output width = 6
-            let mut clippy = ClippyOutput::new(6);
+            let mut clippy = ClippyArt::new(6);
             clippy.add_str("aa");
             clippy.finish();
 
@@ -190,7 +190,7 @@ mod tests {
         }
         {
             // Wrap long line
-            let mut clippy = ClippyOutput::new(6);
+            let mut clippy = ClippyArt::new(6);
             clippy.add_str("aaa");
             clippy.finish();
 
@@ -202,7 +202,7 @@ mod tests {
         }
         {
             // Append string
-            let mut clippy = ClippyOutput::new(6);
+            let mut clippy = ClippyArt::new(6);
             clippy.add_str("a");
             let result: String = clippy.by_ref().collect();
             assert_eq!(result, CLIPPY_ART.to_string() + "/‾  ‾\\\n");
@@ -214,7 +214,7 @@ mod tests {
         }
         {
             // Newline in string
-            let mut clippy = ClippyOutput::new(6);
+            let mut clippy = ClippyArt::new(6);
             clippy.add_str("a\n");
             let result: String = clippy.by_ref().collect();
             assert_eq!(result, CLIPPY_ART.to_string() + "/‾  ‾\\\n| a  |\n");
@@ -226,7 +226,7 @@ mod tests {
         }
         {
             // Word wrapping
-            let mut clippy = ClippyOutput::new(7);
+            let mut clippy = ClippyArt::new(7);
             clippy.add_str("a");
             clippy.add_str("\n");
             clippy.add_str("aaaa\n");

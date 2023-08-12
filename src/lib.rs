@@ -2,11 +2,29 @@
 
 use regex::{Captures, Regex, Replacer};
 use std::borrow::Cow;
+use std::io::Write;
 use std::mem::swap;
+use terminal_size::terminal_size;
+use crate::clippit_art::ClippyArt;
 
 pub mod clippit_art;
 
-/// Replaces words in given string to sound like Clippy.
+pub fn output<Writer>(input: &str, output: &mut Writer) -> std::io::Result<()>
+    where Writer: Write,
+{
+    let width = u16::min(terminal_size().map(|a| a.0 .0).unwrap_or(100), 120);
+    let mut clippy = ClippyArt::new(width);
+
+    clippy.add_str(&replace_words(&input));
+    clippy.finish();
+    for s in clippy {
+        write!(output, "{s}")?;
+    }
+
+    Ok(())
+}
+
+/// Replaces words in given string to sound like Clippit.
 pub fn replace_words(s: &str) -> String {
     let mut result = s.to_string();
     regex_replace_once(&mut result, "^    Checking(.*)", "I'm checking$1...");
