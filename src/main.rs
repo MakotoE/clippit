@@ -1,16 +1,23 @@
 #![warn(clippy::pedantic)]
 
 use std::env::args;
+use std::io::Write;
 use anyhow::Result;
 use clippit::{output};
-use std::process::Command;
+use std::process::{Command};
 
 /// Use -v to see the `cargo clippy` command and output.
 fn main() -> Result<()> {
-    let mut args: Vec<String> = args().skip(1).collect();
+    let args: Vec<String> = args().skip(1).collect();
+    std::process::exit(run(args, &mut std::io::stderr())?);
+}
+
+fn run<Writer>(mut args: Vec<String>, writer: &mut Writer) -> Result<i32>
+    where Writer: Write,
+{
     args.insert(0, "clippy".to_string());
 
-    let is_verbose = args.iter().any(|arg| {arg == "-v" || arg == "--verbose"});
+    let is_verbose = args.iter().any(|arg| { arg == "-v" || arg == "--verbose" });
 
     let mut command = Command::new("cargo");
 
@@ -24,8 +31,25 @@ fn main() -> Result<()> {
         eprintln!("clippy output: {clippy_string}");
     }
 
+    output(clippy_string, writer)?;
+    Ok(clippy_output.status.code().unwrap_or(0))
+}
 
-    output(clippy_string, &mut std::io::stderr())?;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    std::process::exit(clippy_output.status.code().unwrap_or(0));
+    #[test]
+    fn problematic_code() {
+        std::env::set_current_dir("problematic-code").unwrap();
+
+        let mut output: Vec<u8> = Vec::new();
+        let status_code = run(Vec::new(), &mut output).unwrap();
+
+        let output_str = std::str::from_utf8(&output).unwrap();
+        println!("{output_str}");
+
+        assert_ne!(status_code, 0);
+        assert!(output_str.contains("problematic-code"));
+    }
 }
