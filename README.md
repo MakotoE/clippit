@@ -14,35 +14,20 @@ $ cargo clippit
    |\_/|
    \___/
      /\
-/‾‾‾‾  ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
-| I'm checking problematic-code v0.1.0 (C:\...\clippy-output\problematic-code)...                               |
-| Hmmm... unnecessary trailing semicolon.                                                                       |
-|  --> src\main.rs:5:19                                                                                         |
-|   |                                                                                                           |
-| 5 |     let pi = 3.14;;                                                                                       |
-|   |                   ^ You should remove this semicolon                                                      |
-|   |                                                                                                           |
-|   Note: `#[warn(redundant_semicolons)]` on by default.                                                        |
-| Hmmm... unused variable: `pi`.                                                                                |
-|  --> src\main.rs:5:9                                                                                          |
-|   |                                                                                                           |
-| 5 |     let pi = 3.14;;                                                                                       |
-|   |         ^^ If this is intentional, prefix it with an underscore: `_pi`                                    |
-|   |                                                                                                           |
-|   Note: `#[warn(unused_variables)]` on by default.                                                            |
-| Hmmm... approximate value of `f{32, 64}::consts::PI` found.                                                   |
-|  --> src\main.rs:5:14                                                                                         |
-|   |                                                                                                           |
-| 5 |     let pi = 3.14;;                                                                                       |
-|   |              ^^^^                                                                                         |
-|   |                                                                                                           |
-|   Hint: consider using the constant directly.                                                                 |
-|   Would you like some help with this? Visit                                                                   |
-|   https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant.                                  |
-|   Note: `#[deny(clippy::approx_constant)]` on by default.                                                     |
-| Hmmm... `problematic-code` (bin "problematic-code") generated 2 warnings.                                     |
-| Let's fix `problematic-code` (bin "problematic-code")!                                                        |
-\_______________________________________________________________________________________________________________/
+/‾‾‾‾  ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
+| I'm checking problematic-code v0.1.0 (C:\...\clippy-output\problematic-code)...                    |
+| Hmmm... unnecessary trailing semicolon.                                                            |
+|  --> src\main.rs:5:19                                                                              |
+|   |                                                                                                |
+| 5 |     let pi = 3.14;;                                                                            |
+|   |                   ^ You should remove this semicolon                                           |
+|   Hint: because `i32::MAX` is the maximum value for this type, this comparison is always false.    |
+|   Would you like some help with this? Visit                                                        |
+|   https://rust-lang.github.io/rust-clippy/master/index.html#absurd_extreme_comparisons.            |
+|   Note: `#[deny(clippy::absurd_extreme_comparisons)]` on by default.                               |
+| Hmmm... `problematic-code` (bin "problematic-code") generated 2 warnings.                          |
+| Let's fix `problematic-code` (bin "problematic-code")!                                             |
+\____________________________________________________________________________________________________/
 ```
 
 Install with `cargo install clippit`, then in a Rust directory, run
