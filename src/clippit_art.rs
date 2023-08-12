@@ -1,14 +1,14 @@
 use std::mem::take;
 use textwrap::wrap;
 
-const CLIPPY_ART: &str = r#"/‾‾\
-|  |
-@  @
-|| |/
-|| ||
-|\_/|
-\___/
-  /\
+const CLIPPY_ART: &str = r#"   /‾‾\
+   |  |
+   @  @
+   || |/
+   || ||
+   |\_/|
+   \___/
+     /\
 "#;
 
 /// Inputs a string and outputs ascii art of Clippy saying the text.
@@ -19,7 +19,6 @@ const CLIPPY_ART: &str = r#"/‾‾\
 pub struct ClippyArt {
     buf: String,
 
-    // output_width >= 5
     output_width: u16,
 
     // Incomplete last line without vertical bars
@@ -27,18 +26,19 @@ pub struct ClippyArt {
 
     // Length of line in chars. Since this is the number of characters, the displayed width may be
     // different. For example, combining characters will cause lines to appear shorter.
-    // line_char_length <= self.output_width - 4
     line_char_length: u16,
 }
 
+const PREFIX: &str = "/‾‾‾‾  ";
+
 impl ClippyArt {
     pub fn new(mut output_width: u16) -> Self {
-        if output_width < 5 {
-            output_width = 5;
+        if output_width < PREFIX.len() as u16 {
+            output_width = PREFIX.len() as u16;
         }
 
-        let mut s = CLIPPY_ART.to_string() + "/‾  ";
-        for _ in 0..output_width - 5 {
+        let mut s = CLIPPY_ART.to_string() + PREFIX;
+        for _ in 0..output_width - PREFIX.len() as u16 {
             s.push('‾');
         }
         s.push_str("\\\n");
@@ -52,7 +52,8 @@ impl ClippyArt {
 
     /// Adds text to be processed.
     pub fn add_str(&mut self, s: &str) {
-        let lines = wrap(s, usize::min((self.output_width - 4) as usize, 2000));
+        const PREFIX_WIDTH: u16 = PREFIX.len() as u16 - 4;
+        let lines = wrap(s, usize::min((self.output_width - PREFIX_WIDTH) as usize, 2000));
 
         for (i, line) in lines.iter().enumerate() {
             for char in line.chars() {
@@ -60,7 +61,7 @@ impl ClippyArt {
                     ClippyArt::add_string_to_buffer(
                         &mut self.buf,
                         &self.line,
-                        self.output_width - 4 - self.line_char_length,
+                        self.output_width - PREFIX_WIDTH - self.line_char_length,
                     );
                     self.line.clear();
                     self.line_char_length = 0;
@@ -69,7 +70,7 @@ impl ClippyArt {
                     self.line_char_length += 1;
                 }
 
-                if self.line_char_length == self.output_width - 4 {
+                if self.line_char_length == self.output_width - PREFIX_WIDTH {
                     ClippyArt::add_string_to_buffer(&mut self.buf, &self.line, 0);
                     self.line.clear();
                     self.line_char_length = 0;
@@ -80,7 +81,7 @@ impl ClippyArt {
                 ClippyArt::add_string_to_buffer(
                     &mut self.buf,
                     &self.line,
-                    self.output_width - 4 - self.line_char_length,
+                    self.output_width - PREFIX_WIDTH - self.line_char_length,
                 );
                 self.line.clear();
                 self.line_char_length = 0;
@@ -103,18 +104,19 @@ impl ClippyArt {
     ///
     /// `add_str()` or `finish()` should not be called after `finish()` was called.
     pub fn finish(&mut self) {
+        const PREFIX_WIDTH: u16 = PREFIX.len() as u16 - 4;
         if !self.line.is_empty() {
             ClippyArt::add_string_to_buffer(
                 &mut self.buf,
                 &self.line,
-                self.output_width - 4 - self.line.chars().count() as u16,
+                self.output_width - PREFIX_WIDTH - self.line.chars().count() as u16,
             );
             self.line.clear();
             self.line_char_length = 0;
         }
 
         self.buf.push('\\');
-        for _ in 0..self.output_width - 2 {
+        for _ in 0..self.output_width - PREFIX_WIDTH + 2 {
             self.buf.push('_');
         }
         self.buf.push_str("/\n");
@@ -146,11 +148,11 @@ mod tests {
             // Minimum output width
             let mut clippy = ClippyArt::new(0);
             let result: String = clippy.by_ref().collect();
-            assert_eq!(result, CLIPPY_ART.to_string() + "/‾  \\\n");
+            assert_eq!(result, CLIPPY_ART.to_string() + "/‾‾‾‾  \\\n");
 
             clippy.finish();
             let result: String = clippy.by_ref().collect();
-            assert_eq!(result, "\\___/\n");
+            assert_eq!(result, "\\______/\n");
         }
         {
             // Add empty string
@@ -158,23 +160,23 @@ mod tests {
             clippy.add_str("");
             clippy.finish();
             let result: String = clippy.collect();
-            assert_eq!(result, CLIPPY_ART.to_string() + "/‾  \\\n\\___/\n");
+            assert_eq!(result, CLIPPY_ART.to_string() + "/‾‾‾‾  \\\n\\______/\n");
         }
         {
             let mut clippy = ClippyArt::new(0);
             clippy.add_str("a");
             let result: String = clippy.by_ref().collect();
-            assert_eq!(result, CLIPPY_ART.to_string() + "/‾  \\\n| a |\n");
+            assert_eq!(result, CLIPPY_ART.to_string() + "/‾‾‾‾  \\\n");
 
             clippy.finish();
             let result: String = clippy.by_ref().collect();
-            assert_eq!(result, "\\___/\n");
+            assert_eq!(result, "| a    |\n\\______/\n");
 
             // Add string after finish()
             clippy.add_str("a");
             clippy.finish();
             let result: String = clippy.collect();
-            assert_eq!(result, "| a |\n\\___/\n");
+            assert_eq!(result, "| a    |\n\\______/\n");
         }
         {
             // Output width = 6
@@ -185,19 +187,19 @@ mod tests {
             let result: String = clippy.collect();
             assert_eq!(
                 result,
-                CLIPPY_ART.to_string() + "/‾  ‾\\\n| aa |\n\\____/\n"
+                CLIPPY_ART.to_string() + "/‾‾‾‾  \\\n| aa   |\n\\______/\n"
             );
         }
         {
             // Wrap long line
             let mut clippy = ClippyArt::new(6);
-            clippy.add_str("aaa");
+            clippy.add_str("aaaaa");
             clippy.finish();
 
             let result: String = clippy.collect();
             assert_eq!(
                 result,
-                CLIPPY_ART.to_string() + "/‾  ‾\\\n| aa |\n| a  |\n\\____/\n"
+                CLIPPY_ART.to_string() + "/‾‾‾‾  \\\n| aaaa |\n| a    |\n\\______/\n"
             );
         }
         {
@@ -205,37 +207,37 @@ mod tests {
             let mut clippy = ClippyArt::new(6);
             clippy.add_str("a");
             let result: String = clippy.by_ref().collect();
-            assert_eq!(result, CLIPPY_ART.to_string() + "/‾  ‾\\\n");
+            assert_eq!(result, CLIPPY_ART.to_string() + "/‾‾‾‾  \\\n");
 
             clippy.add_str("a");
             clippy.finish();
             let result: String = clippy.collect();
-            assert_eq!(result, "| aa |\n\\____/\n");
+            assert_eq!(result, "| aa   |\n\\______/\n");
         }
         {
             // Newline in string
             let mut clippy = ClippyArt::new(6);
             clippy.add_str("a\n");
             let result: String = clippy.by_ref().collect();
-            assert_eq!(result, CLIPPY_ART.to_string() + "/‾  ‾\\\n| a  |\n");
+            assert_eq!(result, CLIPPY_ART.to_string() + "/‾‾‾‾  \\\n| a    |\n");
 
             clippy.add_str("b");
             clippy.finish();
             let result: String = clippy.collect();
-            assert_eq!(result, "| b  |\n\\____/\n");
+            assert_eq!(result, "| b    |\n\\______/\n");
         }
         {
             // Word wrapping
             let mut clippy = ClippyArt::new(7);
             clippy.add_str("a");
             clippy.add_str("\n");
-            clippy.add_str("aaaa\n");
+            clippy.add_str("aaaaaaa\n");
             clippy.add_str("b");
             clippy.finish();
             let result: String = clippy.collect();
             assert_eq!(
                 result,
-                CLIPPY_ART.to_string() + "/‾  ‾‾\\\n| a   |\n| aaa |\n| a   |\n| b   |\n\\_____/\n"
+                CLIPPY_ART.to_string() + "/‾‾‾‾  \\\n| a    |\n| aaaa |\n| aaa  |\n| b    |\n\\______/\n"
             );
         }
     }
