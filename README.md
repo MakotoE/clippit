@@ -5,7 +5,7 @@
 `clippit` makes `cargo clippy` sound like Office 2003's Clippit assistant (aka "Clippy").
 
 ```none
-$ cargo clippit
+$ clippit
    /‾‾\
    |  |
    @  @
@@ -33,7 +33,7 @@ $ cargo clippit
 Install with `cargo install clippit`, then in a Rust directory, run
 
 ```none
-cargo clippit
+clippit
 ```
 
 Only tested with `rustc 1.71.1` and `clippy 0.1.71`.
