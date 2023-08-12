@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use std::env::args;
 use anyhow::Result;
 use clippit::{output};
@@ -9,14 +11,16 @@ fn main() -> Result<()> {
     let mut command = Command::new("cargo");
     command.args(args());
 
+    let clippy_output = command.output()?;
+    let clippy_string = std::str::from_utf8(&*clippy_output.stderr)?;
+
     if is_verbose {
         println!("clippy command: {:?}", command);
+        println!("clippy output: {clippy_string}");
     }
 
-    let clippy_output = command.output()?;
-    let clippy_string = std::str::from_utf8(&*clippy_output.stdout)?;
 
-    output(clippy_string, &mut std::io::stdout())?;
+    output(clippy_string, &mut std::io::stderr())?;
 
     Ok(())
 }

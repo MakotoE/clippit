@@ -1,0 +1,1 @@
+This project contains code that clippy really hates.
