@@ -1,6 +1,6 @@
 [package]
 name = "clippit"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Makoto <makoto@emurasoft.com>"]
 edition = "2021"
 documentation = "https://docs.rs/clippit/"
