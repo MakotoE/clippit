@@ -15,7 +15,7 @@ pub fn output<Writer>(input: &str, output: &mut Writer) -> std::io::Result<()>
     let width = u16::min(terminal_size().map(|a| a.0.0).unwrap_or(100), 120);
     let mut clippy = ClippyArt::new(width);
 
-    clippy.add_str(&replace_words(&input));
+    clippy.add_str(&replace_words(input));
     clippy.finish();
     for s in clippy {
         write!(output, "{s}")?;
@@ -26,6 +26,8 @@ pub fn output<Writer>(input: &str, output: &mut Writer) -> std::io::Result<()>
 
 /// Replaces words in given string to sound like Clippit.
 pub fn replace_words(s: &str) -> String {
+    let no_warnings = !s.contains("warning:") && !s.contains("error:");
+
     let mut result = s.to_string();
     regex_replace_once(&mut result, "^    Checking(.*)", "I'm checking$1...");
 
@@ -135,6 +137,10 @@ pub fn replace_words(s: &str) -> String {
         "#$@#$@#$!#$%!@#$ !INTERNAL ERROR! PLEASE REFER TO OWNERS MANUAL\n",
     );
 
+    if no_warnings {
+        result.push_str("Woohoo, no warnings!\n");
+    }
+
     result
 }
 
@@ -163,14 +169,16 @@ mod tests {
 
     #[rstest]
     // 1
-    #[case("", "")]
+    #[case("", "Woohoo, no warnings!\n")]
     // 2
     #[case(
     r#"    Checking playground v0.0.1 (/playground)
     Finished dev [unoptimized + debuginfo] target(s) in 1.40s
 "#,
+    // Expected
     r#"I'm checking playground v0.0.1 (/playground)...
 I finished compiling dev [unoptimized + debuginfo] target(s) in 1.40s.
+Woohoo, no warnings!
 "#
     )]
     // 3
@@ -181,26 +189,31 @@ I finished compiling dev [unoptimized + debuginfo] target(s) in 1.40s.
     */
     #[case(
     r#"    Checking playground v0.0.1 (/playground)
-error: expected expression, found `.`
- --> src/main.rs:2:5
+error: expected item, found `.`
+ --> src/lib.rs:1:1
   |
-2 |     .
-  |     ^ expected expression
+1 | .
+  | ^ expected item
 
-error: could not compile `playground` (bin "playground") due to previous error
+error: could not compile `playground` (lib) due to previous error
 "#,
     // Expected
     r#"I'm checking playground v0.0.1 (/playground)...
-The syntax is wrong because I expected expression but I found `.`.
- --> src/main.rs:2:5
+The syntax is wrong because I expected item but I found `.`.
+ --> src/lib.rs:1:1
   |
-2 |     .
-  |     ^ expected expression
+1 | .
+  | ^ expected item
 
-Let's fix `playground` (bin "playground")!
+Let's fix `playground` (lib)!
 "#
     )]
     // 4
+    /*
+    fn main() {
+        println!("{}", ((0)));;
+    }
+     */
     #[case(
     r#"    Checking playground v0.0.1 (/playground)
 warning: unnecessary trailing semicolon
@@ -217,12 +230,11 @@ warning: consider removing unnecessary double parentheses
 2 |     println!("{}", ((0)));;
   |                    ^^^^^
   |
-  = note: `#[warn(clippy::double_parens)]` on by default
   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#double_parens
+  = note: `#[warn(clippy::double_parens)]` on by default
 
-warning: 2 warnings emitted
-
-    Finished dev [unoptimized + debuginfo] target(s) in 0.54s
+warning: `playground` (bin "playground") generated 2 warnings
+    Finished dev [unoptimized + debuginfo] target(s) in 0.41s
 "#,
     // Expected
     r#"I'm checking playground v0.0.1 (/playground)...
@@ -240,177 +252,152 @@ Hmmm... consider removing unnecessary double parentheses.
 2 |     println!("{}", ((0)));;
   |                    ^^^^^
   |
-  Note: `#[warn(clippy::double_parens)]` on by default.
   Would you like some help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#double_parens.
+  Note: `#[warn(clippy::double_parens)]` on by default.
 
-You have 2 issues in your code.
-
-I finished compiling dev [unoptimized + debuginfo] target(s) in 0.54s.
+Hmmm... `playground` (bin "playground") generated 2 warnings.
+I finished compiling dev [unoptimized + debuginfo] target(s) in 0.41s.
 "#
     )]
     // 5
+    /*
+    fn main() {
+        let mut a = 0;
+        let mut b = 0;
+        a = b;
+        b = a;
+        let pi = 3.14;
+        if 100 > i32::MAX {}
+    }
+     */
     #[case(
-    r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
+    r#"    Checking playground v0.0.1 (/playground)
 warning: value assigned to `a` is never read
- --> src/main.rs:3:13
+ --> src/main.rs:2:13
   |
-3 |     let mut a = 0;
+2 |     let mut a = 0;
   |             ^
   |
-  = note: `#[warn(unused_assignments)]` on by default
   = help: maybe it is overwritten before being read?
+  = note: `#[warn(unused_assignments)]` on by default
 
 warning: value assigned to `b` is never read
- --> src/main.rs:6:5
+ --> src/main.rs:5:5
   |
-6 |     b = a;
+5 |     b = a;
   |     ^
   |
   = help: maybe it is overwritten before being read?
 
 warning: unused variable: `pi`
- --> src/main.rs:7:9
+ --> src/main.rs:6:9
   |
-7 |     let pi = 3.14;
+6 |     let pi = 3.14;
   |         ^^ help: if this is intentional, prefix it with an underscore: `_pi`
   |
   = note: `#[warn(unused_variables)]` on by default
 
 error: this looks like you are trying to swap `a` and `b`
- --> src/main.rs:5:5
+ --> src/main.rs:4:5
   |
-5 | /     a = b;
-6 | |     b = a;
+4 | /     a = b;
+5 | |     b = a;
   | |_________^ help: try: `std::mem::swap(&mut a, &mut b)`
   |
-  = note: `#[deny(clippy::almost_swapped)]` on by default
   = note: or maybe you should use `std::mem::replace`?
   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#almost_swapped
+  = note: `#[deny(clippy::almost_swapped)]` on by default
 
-error: this comparison involving the minimum or maximum element for this type contains a case that is always true or always false
- --> src/main.rs:2:8
+error: approximate value of `f{32, 64}::consts::PI` found
+ --> src/main.rs:6:14
   |
-2 |     if 100 > i32::MAX {}
-  |        ^^^^^^^^^^^^^^
-  |
-  = note: `#[deny(clippy::absurd_extreme_comparisons)]` on by default
-  = help: because `i32::MAX` is the maximum value for this type, this comparison is always false
-  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#absurd_extreme_comparisons
-
-error: approximate value of `f{32, 64}::consts::PI` found. Consider using it directly
- --> src/main.rs:7:14
-  |
-7 |     let pi = 3.14;
+6 |     let pi = 3.14;
   |              ^^^^
   |
-  = note: `#[deny(clippy::approx_constant)]` on by default
+  = help: consider using the constant directly
   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant
+  = note: `#[deny(clippy::approx_constant)]` on by default
 
-error: aborting due to 3 previous errors; 3 warnings emitted
+error: this comparison involving the minimum or maximum element for this type contains a case that is always true or always false
+ --> src/main.rs:7:8
+  |
+7 |     if 100 > i32::MAX {}
+  |        ^^^^^^^^^^^^^^
+  |
+  = help: because `i32::MAX` is the maximum value for this type, this comparison is always false
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#absurd_extreme_comparisons
+  = note: `#[deny(clippy::absurd_extreme_comparisons)]` on by default
 
-error: could not compile `rs-test`
-
-To learn more, run the command again with --verbose.
+warning: `playground` (bin "playground") generated 3 warnings
+error: could not compile `playground` (bin "playground") due to 3 previous errors; 3 warnings emitted
 "#,
     // Expected
-    r#"I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...
+    r#"I'm checking playground v0.0.1 (/playground)...
 Hmmm... value assigned to `a` is never read.
- --> src/main.rs:3:13
+ --> src/main.rs:2:13
   |
-3 |     let mut a = 0;
+2 |     let mut a = 0;
   |             ^
   |
-  Note: `#[warn(unused_assignments)]` on by default.
   Hint: maybe it is overwritten before being read?
+  Note: `#[warn(unused_assignments)]` on by default.
 
 Hmmm... value assigned to `b` is never read.
- --> src/main.rs:6:5
+ --> src/main.rs:5:5
   |
-6 |     b = a;
+5 |     b = a;
   |     ^
   |
   Hint: maybe it is overwritten before being read?
 
 Hmmm... unused variable: `pi`.
- --> src/main.rs:7:9
+ --> src/main.rs:6:9
   |
-7 |     let pi = 3.14;
+6 |     let pi = 3.14;
   |         ^^ If this is intentional, prefix it with an underscore: `_pi`
   |
   Note: `#[warn(unused_variables)]` on by default.
 
 Hmmm... this looks like you are trying to swap `a` and `b`.
- --> src/main.rs:5:5
+ --> src/main.rs:4:5
   |
-5 | /     a = b;
-6 | |     b = a;
+4 | /     a = b;
+5 | |     b = a;
   | |_________^ You should try: `std::mem::swap(&mut a, &mut b)`
   |
-  Note: `#[deny(clippy::almost_swapped)]` on by default.
   Note: or maybe you should use `std::mem::replace`?
   Would you like some help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#almost_swapped.
+  Note: `#[deny(clippy::almost_swapped)]` on by default.
+
+Hmmm... approximate value of `f{32, 64}::consts::PI` found.
+ --> src/main.rs:6:14
+  |
+6 |     let pi = 3.14;
+  |              ^^^^
+  |
+  Hint: consider using the constant directly.
+  Would you like some help with this? Visit
+  https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant.
+  Note: `#[deny(clippy::approx_constant)]` on by default.
 
 Hmmm... this comparison involving the minimum or maximum element for this type contains a case that is always true or always false.
- --> src/main.rs:2:8
+ --> src/main.rs:7:8
   |
-2 |     if 100 > i32::MAX {}
+7 |     if 100 > i32::MAX {}
   |        ^^^^^^^^^^^^^^
   |
-  Note: `#[deny(clippy::absurd_extreme_comparisons)]` on by default.
   Hint: because `i32::MAX` is the maximum value for this type, this comparison is always false.
   Would you like some help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#absurd_extreme_comparisons.
+  Note: `#[deny(clippy::absurd_extreme_comparisons)]` on by default.
 
-It looks like this could be improved because approximate value of `f{32, 64}::consts::PI` found. Consider using it directly.
- --> src/main.rs:7:14
-  |
-7 |     let pi = 3.14;
-  |              ^^^^
-  |
-  Note: `#[deny(clippy::approx_constant)]` on by default.
-  Would you like some help with this? Visit
-  https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant.
-
-Sorry, but you have too many errors in your code.
-
-Let's fix `rs-test`!
-
-To learn more, run the command again with --verbose.
+Hmmm... `playground` (bin "playground") generated 3 warnings.
+Let's fix `playground` (bin "playground")!
 "#
     )]
     // 6
-    #[case(
-    r#"    Checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)
-warning: unused variable: `a`
- --> src/main.rs:2:9
-  |
-2 |     let a = 0;
-  |         ^ help: if this is intentional, prefix it with an underscore: `_a`
-  |
-  = note: `#[warn(unused_variables)]` on by default
-
-warning: 1 warning emitted
-
-    Finished dev [unoptimized + debuginfo] target(s) in 0.02s
-"#,
-    // Expected
-    r#"I'm checking rs-test v0.1.0 (/home/makoto/Downloads/rs-test)...
-Hmmm... unused variable: `a`.
- --> src/main.rs:2:9
-  |
-2 |     let a = 0;
-  |         ^ If this is intentional, prefix it with an underscore: `_a`
-  |
-  Note: `#[warn(unused_variables)]` on by default.
-
-You have 1 issue in your code.
-
-I finished compiling dev [unoptimized + debuginfo] target(s) in 0.02s.
-"#
-    )]
-    // 7
     /*
     #[deny(clippy::drop_copy)]
     fn main() {
@@ -475,16 +462,23 @@ Hmmm... `playground` (bin "playground") generated 1 warning.
 Let's fix `playground` (bin "playground")!
 "#
     )]
-    // 8 Check for false positives
+    // 7 Check for false positives in string literal
+    /*
+    fn main() {
+        println!("error: aborting due to previous error{}", 0 as i32);
+        println!("= help:{}", match 0 {_ => 0});
+    }
+     */
     #[case(
-    r#"warning: casting integer literal to `i32` is unnecessary
+    r#"    Checking playground v0.0.1 (/playground)
+warning: casting integer literal to `i32` is unnecessary
  --> src/main.rs:2:57
   |
 2 |     println!("error: aborting due to previous error{}", 0 as i32);
   |                                                         ^^^^^^^^ help: try: `0_i32`
   |
-  = note: `#[warn(clippy::unnecessary_cast)]` on by default
   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_cast
+  = note: `#[warn(clippy::unnecessary_cast)]` on by default
 
 warning: this match could be replaced by its body itself
  --> src/main.rs:3:27
@@ -492,23 +486,23 @@ warning: this match could be replaced by its body itself
 3 |     println!("= help:{}", match 0 {_ => 0});
   |                           ^^^^^^^^^^^^^^^^ help: consider using the match body instead: `0`
   |
-  = note: `#[warn(clippy::match_single_binding)]` on by default
   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#match_single_binding
+  = note: `#[warn(clippy::match_single_binding)]` on by default
 
-warning: 2 warnings emitted
-
-    Finished dev [unoptimized + debuginfo] target(s) in 0.00s
+warning: `playground` (bin "playground") generated 2 warnings (run `cargo clippy --fix --bin "playground"` to apply 2 suggestions)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.59s
 "#,
     // Expected
-    r#"Hmmm... casting integer literal to `i32` is unnecessary.
+    r#"I'm checking playground v0.0.1 (/playground)...
+Hmmm... casting integer literal to `i32` is unnecessary.
  --> src/main.rs:2:57
   |
 2 |     println!("error: aborting due to previous error{}", 0 as i32);
   |                                                         ^^^^^^^^ You should try: `0_i32`
   |
-  Note: `#[warn(clippy::unnecessary_cast)]` on by default.
   Would you like some help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_cast.
+  Note: `#[warn(clippy::unnecessary_cast)]` on by default.
 
 Hmmm... this match could be replaced by its body itself.
  --> src/main.rs:3:27
@@ -516,41 +510,89 @@ Hmmm... this match could be replaced by its body itself.
 3 |     println!("= help:{}", match 0 {_ => 0});
   |                           ^^^^^^^^^^^^^^^^ You should consider using the match body instead: `0`
   |
-  Note: `#[warn(clippy::match_single_binding)]` on by default.
   Would you like some help with this? Visit
   https://rust-lang.github.io/rust-clippy/master/index.html#match_single_binding.
+  Note: `#[warn(clippy::match_single_binding)]` on by default.
 
-You have 2 issues in your code.
-
-I finished compiling dev [unoptimized + debuginfo] target(s) in 0.00s.
+Hmmm... `playground` (bin "playground") generated 2 warnings (run `cargo clippy --fix --bin "playground"` to apply 2 suggestions).
+I finished compiling dev [unoptimized + debuginfo] target(s) in 0.59s.
 "#
     )]
-    // 9
+    // 8
+    /*
+    fn main() {
+        let mut b = &0;
+        {
+            let a = 0;
+            b = &a;
+        }
+        println!("{}", b);
+    }
+     */
     #[case(
-    r#"error[E0597]: `a` does not live long enough
- --> src/main.rs:6:22
+    r#"    Checking playground v0.0.1 (/playground)
+warning: value assigned to `b` is never read
+ --> src/main.rs:2:13
   |
-6 |         b = function(&a);
-  |                      ^^ borrowed value does not live long enough
-7 |     }
+2 |     let mut b = &0;
+  |             ^
+  |
+  = help: maybe it is overwritten before being read?
+  = note: `#[warn(unused_assignments)]` on by default
+
+error[E0597]: `a` does not live long enough
+ --> src/main.rs:5:13
+  |
+4 |         let a = 0;
+  |             - binding `a` declared here
+5 |         b = &a;
+  |             ^^ borrowed value does not live long enough
+6 |     }
   |     - `a` dropped here while still borrowed
-8 |     println!("{}", b);
+7 |     println!("{}", b);
   |                    - borrow later used here
+
+For more information about this error, try `rustc --explain E0597`.
+warning: `playground` (bin "playground") generated 1 warning
+error: could not compile `playground` (bin "playground") due to previous error; 1 warning emitted
 "#,
-    r#"Oops! It looks like the variable with lifetime `a` is dropped before it is used.
- --> src/main.rs:6:22
+    // Expected
+    r#"I'm checking playground v0.0.1 (/playground)...
+Hmmm... value assigned to `b` is never read.
+ --> src/main.rs:2:13
   |
-6 |         b = function(&a);
-  |                      ^^ borrowed value does not live long enough
-7 |     }
+2 |     let mut b = &0;
+  |             ^
+  |
+  Hint: maybe it is overwritten before being read?
+  Note: `#[warn(unused_assignments)]` on by default.
+
+Oops! It looks like the variable with lifetime `a` is dropped before it is used.
+ --> src/main.rs:5:13
+  |
+4 |         let a = 0;
+  |             - binding `a` declared here
+5 |         b = &a;
+  |             ^^ borrowed value does not live long enough
+6 |     }
   |     - `a` dropped here while still borrowed
-8 |     println!("{}", b);
+7 |     println!("{}", b);
   |                    - borrow later used here
+
+For more information about this error, try `rustc --explain E0597`.
+Hmmm... `playground` (bin "playground") generated 1 warning.
+Let's fix `playground` (bin "playground")!
 "#
     )]
     // 10
+    /*
+    fn main() {
+        println();
+    }
+     */
     #[case(
-    r#"error[E0423]: expected function, found macro `println`
+    r#"    Checking playground v0.0.1 (/playground)
+error[E0423]: expected function, found macro `println`
  --> src/main.rs:2:5
   |
 2 |     println();
@@ -559,9 +601,13 @@ I finished compiling dev [unoptimized + debuginfo] target(s) in 0.00s.
 help: use `!` to invoke the macro
   |
 2 |     println!();
-  |            ^
+  |            +
+
+For more information about this error, try `rustc --explain E0423`.
+error: could not compile `playground` (bin "playground") due to previous error
 "#,
-    r#"Oops! I expected function, but I found macro `println`.
+    r#"I'm checking playground v0.0.1 (/playground)...
+Oops! I expected function, but I found macro `println`.
  --> src/main.rs:2:5
   |
 2 |     println();
@@ -570,10 +616,14 @@ help: use `!` to invoke the macro
 Psst... use `!` to invoke the macro.
   |
 2 |     println!();
-  |            ^
+  |            +
+
+For more information about this error, try `rustc --explain E0423`.
+Let's fix `playground` (bin "playground")!
 "#
     )]
     // 11
+    // Unable to produce such output on newest clippy but keeping this case
     #[case(
     r#"thread 'main' panicked at 'Usage of `--fix` requires `-Z unstable-options`', src/tools/clippy/src/main.rs:92:13
 note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
@@ -581,6 +631,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
     r#"#$@#$@#$!#$%!@#$ !INTERNAL ERROR! PLEASE REFER TO OWNERS MANUAL
 'Usage of `--fix` requires `-Z unstable-options`', src/tools/clippy/src/main.rs:92:13
 Note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace.
+Woohoo, no warnings!
 "#
     )]
     fn test_replace_words(#[case] input: &str, #[case] expected: &str) {

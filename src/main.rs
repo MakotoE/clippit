@@ -24,10 +24,10 @@ fn run<Writer>(mut args: Vec<String>, writer: &mut Writer) -> Result<i32>
     command.args(args);
 
     let clippy_output = command.output()?;
-    let clippy_string = std::str::from_utf8(&*clippy_output.stderr)?;
+    let clippy_string = std::str::from_utf8(clippy_output.stderr.as_ref())?;
 
     if is_verbose {
-        eprintln!("clippy command: {:?}", command);
+        eprintln!("clippy command: {command:?}");
         eprintln!("clippy output: {clippy_string}");
     }
 
