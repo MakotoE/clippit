@@ -53,7 +53,10 @@ impl ClippyArt {
     /// Adds text to be processed.
     pub fn add_str(&mut self, s: &str) {
         const PREFIX_WIDTH: u16 = PREFIX.len() as u16 - 4;
-        let lines = wrap(s, usize::min((self.output_width - PREFIX_WIDTH) as usize, 2000));
+        let lines = wrap(
+            s,
+            usize::min((self.output_width - PREFIX_WIDTH) as usize, 2000),
+        );
 
         for (i, line) in lines.iter().enumerate() {
             for char in line.chars() {
@@ -237,7 +240,8 @@ mod tests {
             let result: String = clippy.collect();
             assert_eq!(
                 result,
-                CLIPPY_ART.to_string() + "/‾‾‾‾  \\\n| a    |\n| aaaa |\n| aaa  |\n| b    |\n\\______/\n"
+                CLIPPY_ART.to_string()
+                    + "/‾‾‾‾  \\\n| a    |\n| aaaa |\n| aaa  |\n| b    |\n\\______/\n"
             );
         }
     }

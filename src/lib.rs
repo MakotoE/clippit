@@ -1,18 +1,19 @@
 #![doc = include_str!("../README.md")]
 
+use crate::clippit_art::ClippyArt;
 use regex::{Captures, Regex, Replacer};
 use std::borrow::Cow;
 use std::io::Write;
 use std::mem::swap;
 use terminal_size::terminal_size;
-use crate::clippit_art::ClippyArt;
 
 pub mod clippit_art;
 
 pub fn output<Writer>(input: &str, output: &mut Writer) -> std::io::Result<()>
-    where Writer: Write,
+where
+    Writer: Write,
 {
-    let width = u16::min(terminal_size().map(|a| a.0.0).unwrap_or(100), 120);
+    let width = u16::min(terminal_size().map(|a| a.0 .0).unwrap_or(100), 120);
     let mut clippy = ClippyArt::new(width);
 
     clippy.add_str(&replace_words(input));
@@ -99,7 +100,7 @@ pub fn replace_words(s: &str) -> String {
         } else {
             "Note:"
         }
-            .to_string();
+        .to_string();
         result.push_str(&caps[2]);
         if !caps[2].ends_with('.') && !caps[2].ends_with('?') {
             result.push('.')
@@ -145,8 +146,8 @@ pub fn replace_words(s: &str) -> String {
 }
 
 fn regex_replace<R>(str: &mut String, regex: &str, replacement: R)
-    where
-        R: Replacer,
+where
+    R: Replacer,
 {
     if let Cow::Owned(mut s) = Regex::new(regex).unwrap().replace_all(str, replacement) {
         swap(str, &mut s);
@@ -154,8 +155,8 @@ fn regex_replace<R>(str: &mut String, regex: &str, replacement: R)
 }
 
 fn regex_replace_once<R>(str: &mut String, regex: &str, replacement: R)
-    where
-        R: Replacer,
+where
+    R: Replacer,
 {
     if let Cow::Owned(mut s) = Regex::new(regex).unwrap().replace(str, replacement) {
         swap(str, &mut s);
@@ -591,7 +592,7 @@ Let's fix `playground` (bin "playground")!
     }
      */
     #[case(
-    r#"    Checking playground v0.0.1 (/playground)
+        r#"    Checking playground v0.0.1 (/playground)
 error[E0423]: expected function, found macro `println`
  --> src/main.rs:2:5
   |
@@ -606,7 +607,7 @@ help: use `!` to invoke the macro
 For more information about this error, try `rustc --explain E0423`.
 error: could not compile `playground` (bin "playground") due to previous error
 "#,
-    r#"I'm checking playground v0.0.1 (/playground)...
+        r#"I'm checking playground v0.0.1 (/playground)...
 Oops! I expected function, but I found macro `println`.
  --> src/main.rs:2:5
   |

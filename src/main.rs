@@ -1,10 +1,10 @@
 #![warn(clippy::pedantic)]
 
+use anyhow::Result;
+use clippit::output;
 use std::env::args;
 use std::io::Write;
-use anyhow::Result;
-use clippit::{output};
-use std::process::{Command};
+use std::process::Command;
 
 /// Use -v to see the `cargo clippy` command and output.
 fn main() -> Result<()> {
@@ -13,11 +13,12 @@ fn main() -> Result<()> {
 }
 
 fn run<Writer>(mut args: Vec<String>, writer: &mut Writer) -> Result<i32>
-    where Writer: Write,
+where
+    Writer: Write,
 {
     args.insert(0, "clippy".to_string());
 
-    let is_verbose = args.iter().any(|arg| { arg == "-v" || arg == "--verbose" });
+    let is_verbose = args.iter().any(|arg| arg == "-v" || arg == "--verbose");
 
     let mut command = Command::new("cargo");
 
